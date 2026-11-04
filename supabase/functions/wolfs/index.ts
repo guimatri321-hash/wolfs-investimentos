@@ -1,5 +1,5 @@
 // Servidor da loja Wolfs LTDA Investimentos (Supabase Edge Function "wolfs").
-// Tabelas: wolfs_config, wolfs_produtos, wolfs_pedidos, wolfs_imagens. Não usa nada da rifa.
+// Tabelas: wolfs_config, wolfs_produtos, wolfs_pedidos, wolfs_imagens, wolfs_docs. Não usa nada da rifa.
 import postgres from "https://deno.land/x/postgresjs@v3.4.5/mod.js";
 import { Buffer } from "node:buffer";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
@@ -10,7 +10,7 @@ const q = async (text: string, params: unknown[] = []) => [...(await sql.unsafe(
 
 const CORS = {
   "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
   "access-control-allow-headers": "content-type, x-admin-token, authorization, apikey, x-client-info",
   "access-control-max-age": "86400",
 };
@@ -33,6 +33,7 @@ function cpfValido(c: string) {
 }
 
 /* ---------------- Configurações ---------------- */
+const COLECOES = ["estoque", "clientes", "vendas", "mercado", "config"];
 const CATEGORIAS = ["iPhone", "Celular", "Fone (AirPods)", "Relógio", "Caixa de som", "Outro"];
 const CONFIG_PADRAO = {
   nomeSite: "Wolfs LTDA Investimentos",
@@ -264,6 +265,34 @@ Deno.serve(async (req: Request) => {
         return json({ token: `${exp}.${assinar(exp)}` });
       }
       exigirAdmin(req);
+
+      /* painel de controle: estoque, clientes, vendas, preços de mercado e configuração */
+      if (m === "GET" && partes[1] === "docs") {
+        const rows = await q("SELECT colecao, id, dados FROM wolfs_docs ORDER BY colecao, id");
+        return json({ agora: new Date().toISOString(), docs: rows });
+      }
+      if (partes[1] === "docs" && COLECOES.includes(partes[2])) {
+        const col = partes[2];
+        if (m === "POST" && !partes[3]) {
+          const id = randomBytes(10).toString("hex");
+          await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::jsonb)", [col, id, JSON.stringify(await corpo())]);
+          return json({ id }, 201);
+        }
+        const id = texto(partes[3], 100);
+        if (!/^[A-Za-z0-9_-]+$/.test(id)) return erro("Documento inválido.");
+        if (m === "PUT") {
+          await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::jsonb) ON CONFLICT (colecao, id) DO UPDATE SET dados = EXCLUDED.dados, atualizado_em = now()", [col, id, JSON.stringify(await corpo())]);
+          return json({ ok: true });
+        }
+        if (m === "PATCH") {
+          await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::jsonb) ON CONFLICT (colecao, id) DO UPDATE SET dados = wolfs_docs.dados || EXCLUDED.dados, atualizado_em = now()", [col, id, JSON.stringify(await corpo())]);
+          return json({ ok: true });
+        }
+        if (m === "DELETE") {
+          await q("DELETE FROM wolfs_docs WHERE colecao = $1 AND id = $2", [col, id]);
+          return json({ ok: true });
+        }
+      }
 
       if (m === "GET" && partes[1] === "resumo") {
         const [cfg, prods, peds] = await Promise.all([
