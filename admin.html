@@ -10,43 +10,104 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="estilo.css">
 <style>
-  main { padding-block: 20px 60px; display: grid; gap: 18px; }
-  .login { max-width: 380px; margin: 60px auto; }
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; }
-  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
-  .kpi span { font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 700; }
-  .kpi b { display: block; font-family: var(--f-display); font-size: 1.45rem; font-weight: 600; margin-top: 6px; }
+  /* Mesmo visual do painel de controle da Wolfs: fundo com o logo, quadros de vidro escuro, vermelho e prata */
+  :root { --panel: rgba(10,10,12,.42); --panel2: rgba(255,255,255,.06); --line: rgba(255,255,255,.12); --gold: #ff3b3b; --gold-soft: rgba(255,59,59,.13); --teal: #ff8a7a; }
+  html { background: #050505; }
+  body { background: transparent; }
+  .fundo { position: fixed; inset: 0; z-index: -1; background: #050505 url("fotos/fundo.jpg") center / cover no-repeat; }
+  .fundo::after { content: ""; position: absolute; inset: 0; background: rgba(5,5,5,.12); }
+  @media (max-aspect-ratio: 1/1) { .fundo { background-image: url("fotos/fundo-vertical.jpg"); } }
+  .card, .kpi, .ped, .prod-row, .login { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .kpi b, .view-head h2, .card h2, .card h3 { text-shadow: 0 2px 10px rgba(0,0,0,.7); }
+
+  .top { background: rgba(7,7,7,.5); }
+  .brand-wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 14px 8px; flex-wrap: wrap; }
+  .lobo { width: 64px; height: 44px; object-fit: cover; border-radius: 10px; flex: none; box-shadow: 0 0 0 1px rgba(255,59,59,.35), 0 8px 22px -10px rgba(255,40,40,.6); }
+  .logo { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+  .logo h1 { font-family: var(--f-display); font-weight: 700; font-size: 1.22rem; margin: 0; letter-spacing: -.015em; }
+  .logo h1 span { font-weight: 400; letter-spacing: .18em; font-size: .72em; color: var(--muted); }
+  .logo p { margin: 0; color: var(--muted); font-size: .8rem; }
+  .quick { display: flex; gap: 8px; flex-wrap: wrap; }
+  .navtabs { border-bottom: 0; }
+  .navtabs button { font-size: .88rem; padding: 10px 14px 12px; }
+
+  main { padding-block: 22px 56px; }
+  .view { display: grid; gap: 18px; }
+  .view-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .view-head h2 { font-family: var(--f-display); font-size: 1.35rem; font-weight: 600; margin: 0; letter-spacing: -.015em; }
+  .view-head p { margin: 4px 0 0; color: var(--muted); font-size: .86rem; max-width: 62ch; }
+  .eyebrow { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--red); font-weight: 700; margin: 0 0 4px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)); gap: 12px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+  .kpi.hero { background: linear-gradient(150deg, var(--gold-soft), transparent 70%), var(--panel); border-color: rgba(255,59,59,.45); }
+  .kpi span { font-size: .7rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 700; }
+  .kpi b { display: block; font-family: var(--f-display); font-size: 1.6rem; font-weight: 600; margin-top: 8px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi small { display: block; font-size: .76rem; color: var(--muted); margin-top: 6px; }
+
+  .grid-3-2 { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 14px; }
+  @media (max-width: 860px) { .grid-3-2 { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border-radius: 14px; padding: 18px; gap: 12px; }
+  .card h3 { font-size: .98rem; font-weight: 700; margin: 0; }
+  .card .note { color: var(--muted); font-size: .8rem; margin: -6px 0 4px; }
+  .chart { position: relative; min-height: 180px; }
+  .chart svg { display: block; }
+  .chart-empty { display: grid; place-items: center; min-height: 160px; color: var(--faint); font-size: .84rem; text-align: center; border: 1px dashed var(--line); border-radius: 10px; padding: 16px; }
+  .barlist { display: grid; gap: 10px; }
+  .barlist div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; font-size: .84rem; }
+  .barlist i { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: var(--panel2); overflow: hidden; }
+  .barlist i span { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #8a0e0e, var(--red)); }
+  .barlist b { font-family: var(--f-mono); font-weight: 500; }
+
+  .login { max-width: 400px; margin: 70px auto; background: var(--panel); }
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .toolbar input[type=search] { flex: 1 1 220px; width: auto; }
   .toolbar select { width: auto; }
-  .ped { border: 1px solid var(--line); background: var(--panel); border-radius: 16px; padding: 16px; display: grid; gap: 10px; }
+  input[type=text], input[type=tel], input[type=number], input[type=password], input[type=search], select, textarea { background: rgba(0,0,0,.45); }
+
+  .ped { border: 1px solid var(--line); background: var(--panel); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+  .ped.novo { border-color: rgba(143,182,255,.45); }
   .ped-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: start; }
   .ped-top b { font-size: 1rem; }
   .ped-top small { color: var(--muted); display: block; }
-  .ped-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 8px 16px; font-size: .86rem; }
-  .ped-info div span { display: block; font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+  .ped-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 10px 16px; font-size: .86rem; }
+  .ped-info div { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; }
+  .ped-info div span { display: block; font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; margin-bottom: 2px; }
   .ped-acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .ped-acts select { width: auto; }
-  .prod-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--line); background: var(--panel); border-radius: 14px; padding: 10px 12px; }
+
+  .prod-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto auto; gap: 14px; align-items: center; border: 1px solid var(--line); background: var(--panel); border-radius: 14px; padding: 10px 14px; }
   .prod-row.off { opacity: .55; }
-  .thumb { width: 56px; height: 56px; border-radius: 12px; background: var(--panel2); border: 1px solid var(--line); object-fit: cover; display: grid; place-items: center; color: var(--muted); font-size: .7rem; overflow: hidden; }
+  .prod-row .preco { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+  .thumb { width: 56px; height: 56px; border-radius: 12px; background: var(--panel2); border: 1px solid var(--line); display: grid; place-items: center; color: var(--muted); font-size: .66rem; text-align: center; overflow: hidden; }
   .thumb img { width: 100%; height: 100%; object-fit: cover; }
   .prod-row b { display: block; }
   .prod-row small { color: var(--muted); }
-  .overlay { position: fixed; inset: 0; z-index: 20; background: rgba(5,8,12,.7); display: grid; place-items: start center; overflow-y: auto; padding: 24px 12px; }
-  .modal { width: min(620px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: grid; gap: 14px; }
+  @media (max-width: 560px) { .prod-row { grid-template-columns: 56px minmax(0, 1fr) auto; } .prod-row .preco { display: none; } }
+
+  .overlay { position: fixed; inset: 0; z-index: 20; background: rgba(5,8,12,.62); backdrop-filter: blur(3px); display: grid; place-items: start center; overflow-y: auto; padding: 24px 12px; }
+  .modal { width: min(640px, 100%); background: rgba(16,16,18,.94); border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: grid; gap: 14px; backdrop-filter: blur(14px); }
   .modal h3 { margin: 0; font-family: var(--f-display); }
-  .row-end { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .row-end { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; }
   .taxas { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
   .check { display: flex; gap: 8px; align-items: center; font-size: .86rem; }
   .check input { accent-color: var(--red); }
+  .cfg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 14px; }
 </style>
 </head>
 <body>
+<div class="fundo" aria-hidden="true"></div>
 <header class="top gutter">
   <div class="inner">
-    <a class="brand" href="./" target="_blank" rel="noopener"><img src="fotos/logo.jpg" alt="Logo Wolfs"><div><b>WOLFS</b><small>Painel do administrador</small></div></a>
-    <button type="button" class="pill-link" id="sair" hidden>Sair</button>
+    <div class="brand-wrap">
+      <a class="logo" href="./" target="_blank" rel="noopener"><img class="lobo" src="fotos/logo.jpg" alt="Logo Wolfs"><div><h1>WOLFS <span>LTDA INVESTIMENTOS</span></h1><p>Painel do administrador · pedidos, produtos e crediário</p></div></a>
+      <div class="quick"><a class="btn" href="./" target="_blank" rel="noopener" style="text-decoration:none">Ver site</a><button type="button" class="btn" id="sair" hidden>Sair</button></div>
+    </div>
+    <nav class="navtabs" role="tablist" aria-label="Seções" id="abas" hidden>
+      <button type="button" role="tab" data-t="pedidos" aria-selected="true">Pedidos <span class="count" id="n-ped">0</span></button>
+      <button type="button" role="tab" data-t="produtos" aria-selected="false">Produtos <span class="count" id="n-prod">0</span></button>
+      <button type="button" role="tab" data-t="config" aria-selected="false">Configurações</button>
+    </nav>
   </div>
 </header>
 
@@ -62,65 +123,88 @@
       </form>
     </section>
 
-    <div id="app" hidden style="display:grid;gap:18px">
-      <nav class="navtabs" role="tablist" aria-label="Seções">
-        <button type="button" role="tab" data-t="pedidos" aria-selected="true">Pedidos <span class="count" id="n-ped">0</span></button>
-        <button type="button" role="tab" data-t="produtos" aria-selected="false">Produtos <span class="count" id="n-prod">0</span></button>
-        <button type="button" role="tab" data-t="config" aria-selected="false">Configurações</button>
-      </nav>
-
+    <div id="app" hidden>
       <!-- PEDIDOS -->
-      <section id="t-pedidos" style="display:grid;gap:14px">
+      <section class="view" id="t-pedidos">
+        <div class="view-head">
+          <div><p class="eyebrow">Pedidos do site</p><h2>Quem pediu e o que falta fazer</h2><p>Cada pedido feito no site cai aqui na hora. Mude o status conforme for aprovando e entregando.</p></div>
+          <button type="button" class="btn" id="atualizar">Atualizar</button>
+        </div>
         <div class="kpis">
-          <div class="kpi"><span>Novos</span><b id="k-novos">0</b></div>
-          <div class="kpi"><span>Em análise</span><b id="k-analise">0</b></div>
-          <div class="kpi"><span>Aprovados</span><b id="k-aprov">0</b></div>
-          <div class="kpi"><span>Valor dos aprovados</span><b id="k-valor">R$ 0</b></div>
+          <div class="kpi hero"><span>Novos</span><b id="k-novos">0</b><small>Esperando seu contato</small></div>
+          <div class="kpi"><span>Em análise</span><b id="k-analise">0</b><small>Crediário sendo avaliado</small></div>
+          <div class="kpi"><span>Aprovados</span><b id="k-aprov">0</b><small>Aprovados e concluídos</small></div>
+          <div class="kpi"><span>Valor aprovado</span><b id="k-valor">R$ 0</b><small>Total a receber dos aprovados</small></div>
+          <div class="kpi"><span>Crediário a receber</span><b id="k-cred">R$ 0</b><small id="k-cred-n">Parcelas dos aprovados</small></div>
+        </div>
+        <div class="grid-3-2">
+          <div class="card"><h3>Pedidos nos últimos 14 dias</h3><p class="note">Quantos pedidos chegaram pelo site por dia</p><div class="chart" id="ch-dias"></div></div>
+          <div class="card"><h3>Mais pedidos</h3><p class="note">Produtos que os clientes mais pedem</p><div class="barlist" id="ch-top"></div></div>
         </div>
         <div class="toolbar">
           <input type="search" id="busca" placeholder="Buscar nome, CPF, telefone, produto ou código" aria-label="Buscar pedidos">
           <select id="f-status" aria-label="Status"><option value="">Todos os status</option><option value="novo">Novo</option><option value="em_analise">Em análise</option><option value="aprovado">Aprovado</option><option value="recusado">Recusado</option><option value="concluido">Concluído</option><option value="cancelado">Cancelado</option></select>
           <select id="f-forma" aria-label="Forma"><option value="">Todas as formas</option><option>Crediário próprio</option><option>Pix</option><option>Crédito parcelado</option><option>Crédito à vista</option></select>
-          <button type="button" class="btn" id="atualizar">Atualizar</button>
         </div>
         <div id="lista-ped" style="display:grid;gap:10px"></div>
-        <p class="fine" id="vazio-ped" hidden>Nenhum pedido por aqui ainda. Quando um cliente enviar um pedido pelo site, ele aparece nesta lista.</p>
+        <div class="card" id="vazio-ped" hidden style="text-align:center"><h3>Nenhum pedido por aqui ainda</h3><p class="note" style="margin:0">Quando um cliente enviar um pedido pelo site, ele aparece nesta lista na hora.</p></div>
       </section>
 
       <!-- PRODUTOS -->
-      <section id="t-produtos" hidden style="display:grid;gap:14px">
-        <div class="row-end"><p class="lead" style="margin:0">Os produtos ativos aparecem na loja na ordem abaixo. O preço é sempre o valor à vista.</p><button type="button" class="btn primary" id="novo-prod">+ Novo produto</button></div>
+      <section class="view" id="t-produtos" hidden>
+        <div class="view-head">
+          <div><p class="eyebrow">Vitrine</p><h2>Produtos do site</h2><p>Os produtos ativos aparecem na loja nesta ordem. O preço é sempre o valor à vista; cartão e crediário são calculados a partir dele.</p></div>
+          <button type="button" class="btn primary" id="novo-prod">+ Novo produto</button>
+        </div>
+        <div class="kpis">
+          <div class="kpi hero"><span>Na loja</span><b id="k-ativos">0</b><small>Produtos aparecendo no site</small></div>
+          <div class="kpi"><span>Fora da loja</span><b id="k-inativos">0</b><small>Escondidos</small></div>
+          <div class="kpi"><span>Preço médio</span><b id="k-medio">R$ 0</b><small>Dos produtos ativos</small></div>
+        </div>
         <div id="lista-prod" style="display:grid;gap:8px"></div>
       </section>
 
       <!-- CONFIGURAÇÕES -->
-      <section id="t-config" hidden>
-        <form class="card" id="cfg-form" novalidate style="border-top:1px solid var(--line)">
-          <h2>Configurações da loja</h2>
-          <p class="sect">Loja</p>
-          <div class="fields">
-            <label class="f" for="c-nome">Nome do site<input type="text" id="c-nome"></label>
-            <label class="f" for="c-whats">WhatsApp da Wolfs (com DDD)<input type="tel" id="c-whats" placeholder="67999990000"></label>
-            <label class="f" for="c-cidade">Cidade<input type="text" id="c-cidade"></label>
-            <label class="f full" for="c-chamada">Frase do topo<input type="text" id="c-chamada"></label>
-            <label class="f full" for="c-rodape">Aviso abaixo dos produtos<input type="text" id="c-rodape"></label>
+      <section class="view" id="t-config" hidden>
+        <div class="view-head"><div><p class="eyebrow">Configurações</p><h2>Regras da loja e do crediário</h2><p>Tudo o que você mudar aqui aparece no site na hora.</p></div></div>
+        <form id="cfg-form" novalidate style="display:grid;gap:14px;border:0;padding:0">
+          <div class="cfg-grid">
+            <div class="card">
+              <h3>Loja</h3>
+              <div class="fields">
+                <label class="f" for="c-nome">Nome do site<input type="text" id="c-nome"></label>
+                <label class="f" for="c-whats">WhatsApp da Wolfs (com DDD)<input type="tel" id="c-whats" placeholder="67999990000"></label>
+                <label class="f" for="c-cidade">Cidade<input type="text" id="c-cidade"></label>
+                <label class="f full" for="c-chamada">Frase do topo<input type="text" id="c-chamada"></label>
+                <label class="f full" for="c-rodape">Aviso abaixo dos produtos<input type="text" id="c-rodape"></label>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Crediário</h3>
+              <div class="fields">
+                <label class="f" for="c-ent">Entrada mínima (%)<input type="number" id="c-ent" min="0" max="90"></label>
+                <label class="f" for="c-max">Máximo de parcelas<input type="number" id="c-max" min="2" max="24"></label>
+                <label class="f" for="c-juros">Juros ao mês (%, máx. 1)<input type="number" id="c-juros" min="0" max="1" step="0.1"></label>
+                <label class="f" for="c-dias">Dias de vencimento<input type="text" id="c-dias" placeholder="5, 10, 15, 20, 25"></label>
+                <label class="check full" for="c-livre"><input type="checkbox" id="c-livre"> Cliente pode simular um valor que não está na vitrine</label>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Mensagens para o cliente</h3>
+              <div class="fields">
+                <label class="f full" for="c-aviso">Depois do cadastro do crediário<textarea id="c-aviso"></textarea></label>
+                <label class="f full" for="c-aviso2">Depois de um pedido no Pix ou cartão<textarea id="c-aviso2"></textarea></label>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Cartão</h3>
+              <div class="fields"><label class="f" for="c-cmax">Máximo de parcelas no cartão<input type="number" id="c-cmax" min="1" max="12"></label></div>
+              <div class="taxas" id="c-taxas"></div>
+              <p class="fine">Taxa da maquininha em % por número de parcelas. O cliente paga a taxa embutida no preço do cartão.</p>
+            </div>
           </div>
-          <p class="sect">Crediário</p>
-          <div class="fields">
-            <label class="f" for="c-ent">Entrada mínima (%)<input type="number" id="c-ent" min="0" max="90"></label>
-            <label class="f" for="c-max">Máximo de parcelas<input type="number" id="c-max" min="2" max="24"></label>
-            <label class="f" for="c-juros">Juros ao mês (%, máx. 1)<input type="number" id="c-juros" min="0" max="1" step="0.1"></label>
-            <label class="f" for="c-dias">Dias de vencimento (separe por vírgula)<input type="text" id="c-dias" placeholder="5, 10, 15, 20, 25"></label>
-            <label class="check full" for="c-livre"><input type="checkbox" id="c-livre"> Cliente pode simular um valor que não está na vitrine</label>
-            <label class="f full" for="c-aviso">Mensagem depois do cadastro do crediário<textarea id="c-aviso"></textarea></label>
-            <label class="f full" for="c-aviso2">Mensagem depois de um pedido no Pix ou cartão<textarea id="c-aviso2"></textarea></label>
-          </div>
-          <p class="sect">Cartão</p>
-          <div class="fields"><label class="f" for="c-cmax">Máximo de parcelas no cartão<input type="number" id="c-cmax" min="1" max="12"></label></div>
-          <div class="taxas" id="c-taxas"></div>
-          <p class="fine">Taxa da maquininha em % para cada número de parcelas. O cliente paga a taxa embutida no preço do cartão.</p>
           <p class="err" id="cfg-err" hidden></p>
-          <button type="submit" class="cta" id="cfg-salvar">Salvar configurações</button>
+          <button type="submit" class="cta" id="cfg-salvar" style="justify-self:start;min-width:260px">Salvar configurações</button>
         </form>
       </section>
     </div>
@@ -180,7 +264,7 @@
     if (!r.ok) throw new Error(d.erro || 'Não foi possível concluir agora.');
     return d;
   }
-  function sair() { TOKEN = ''; try { sessionStorage.removeItem('wolfs-token'); } catch {} $('app').hidden = true; $('sair').hidden = true; $('login').hidden = false; }
+  function sair() { TOKEN = ''; try { sessionStorage.removeItem('wolfs-token'); } catch {} $('app').hidden = true; $('sair').hidden = true; $('abas').hidden = true; $('login').hidden = false; }
   $('sair').addEventListener('click', sair);
   $('login-form').addEventListener('submit', async (e) => {
     e.preventDefault(); $('login-err').hidden = true;
@@ -190,7 +274,7 @@
 
   async function carregar() {
     D = await api('admin/resumo');
-    $('login').hidden = true; $('app').hidden = false; $('sair').hidden = false;
+    $('login').hidden = true; $('app').hidden = false; $('sair').hidden = false; $('abas').hidden = false;
     desenharPedidos(); desenharProdutos(); preencherConfig();
   }
   $('atualizar').addEventListener('click', () => carregar().then(() => toast('Atualizado')).catch((e) => toast(e.message)));
@@ -219,10 +303,14 @@
     $('k-analise').textContent = ps.filter((p) => p.status === 'em_analise').length;
     const aprov = ps.filter((p) => p.status === 'aprovado' || p.status === 'concluido');
     $('k-aprov').textContent = aprov.length; $('k-valor').textContent = brl(aprov.reduce((a, p) => a + p.total, 0));
+    const cred = aprov.filter((p) => p.forma === 'Crediário próprio');
+    $('k-cred').textContent = brl(cred.reduce((a, p) => a + (p.total - p.entrada), 0));
+    $('k-cred-n').textContent = `${cred.reduce((a, p) => a + p.parcelas, 0)} parcelas de ${cred.length} cliente${cred.length === 1 ? '' : 's'}`;
+    desenharGraficos(ps);
     const q = $('busca').value.trim().toLowerCase(), st = $('f-status').value, fm = $('f-forma').value;
     const lista = ps.filter((p) => (!st || p.status === st) && (!fm || p.forma === fm) && (!q || [p.nome, p.cpf, p.telefone, p.produtoNome, p.codigo].join(' ').toLowerCase().includes(q)));
     $('lista-ped').replaceChildren(...lista.map((p) => {
-      const box = el('article', 'ped');
+      const box = el('article', 'ped' + (p.status === 'novo' ? ' novo' : ''));
       const top = el('div', 'ped-top'); const a = el('div'); a.append(el('b', null, `${p.nome} · ${p.produtoNome}`), el('small', null, `${p.codigo} · ${dataHora(p.criadoEm)} · ${p.forma}`));
       top.append(a, el('span', 'pill p-' + p.status, STATUS[p.status]));
       const info = el('div', 'ped-info');
@@ -245,15 +333,43 @@
   }
   ['busca', 'f-status', 'f-forma'].forEach((id) => $(id).addEventListener(id === 'busca' ? 'input' : 'change', desenharPedidos));
 
+  function desenharGraficos(ps) {
+    const box = $('ch-dias');
+    const dias = Array.from({ length: 14 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 13 + i); return d.toLocaleDateString('sv'); });
+    const cont = dias.map((d) => ps.filter((p) => new Date(p.criadoEm).toLocaleDateString('sv') === d).length);
+    if (!ps.length) box.replaceChildren(el('div', 'chart-empty', 'O gráfico aparece quando chegarem os primeiros pedidos.'));
+    else {
+      const W = Math.max(300, box.clientWidth || 600), H = 180, L = 26, B = 22, T = 10, max = Math.max(1, ...cont);
+      const bw = (W - L) / 14;
+      const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', '100%'); svg.setAttribute('height', H);
+      const add = (tag, at, txt) => { const e = document.createElementNS(ns, tag); for (const k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; svg.append(e); return e; };
+      [0, Math.ceil(max / 2), max].filter((v, i, a) => a.indexOf(v) === i).forEach((v) => { const y = H - B - (H - B - T) * v / max; add('line', { x1: L, x2: W, y1: y, y2: y, stroke: 'rgba(255,255,255,.1)' }); add('text', { x: L - 6, y: y + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#a0a1ab' }, v); });
+      cont.forEach((v, i) => {
+        const h = (H - B - T) * v / max, x = L + i * bw + bw * .18;
+        const r = add('rect', { x, y: H - B - h, width: bw * .64, height: Math.max(v ? 2 : 0, h), rx: 4, fill: v ? '#ff3b3b' : 'transparent' });
+        const t = document.createElementNS(ns, 'title'); t.textContent = `${new Date(dias[i] + 'T12:00').toLocaleDateString('pt-BR')}: ${v} pedido${v === 1 ? '' : 's'}`; r.append(t);
+        if (i % 2 === 1 || i === 13) add('text', { x: x + bw * .32, y: H - 6, 'text-anchor': 'middle', 'font-size': 10, fill: '#a0a1ab' }, new Date(dias[i] + 'T12:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+      });
+      box.replaceChildren(svg);
+    }
+    const top = {}; ps.forEach((p) => { top[p.produtoNome] = (top[p.produtoNome] || 0) + 1; });
+    const lista = Object.entries(top).sort((a, b) => b[1] - a[1]).slice(0, 6); const m = Math.max(1, ...lista.map((x) => x[1]));
+    $('ch-top').replaceChildren(...(lista.length ? lista.map(([n, v]) => { const d = el('div'); const i = el('i'); const s2 = el('span'); s2.style.width = (v / m * 100) + '%'; i.append(s2); d.append(el('span', null, n), el('b', null, String(v)), i); return d; }) : [el('div', 'chart-empty', 'Ainda sem pedidos.')]));
+  }
+
   /* ---------- Produtos ---------- */
   function desenharProdutos() {
-    $('n-prod').textContent = D.produtos.filter((p) => p.ativo).length;
+    const at = D.produtos.filter((p) => p.ativo);
+    $('n-prod').textContent = at.length; $('k-ativos').textContent = at.length; $('k-inativos').textContent = D.produtos.length - at.length;
+    $('k-medio').textContent = brl(at.length ? at.reduce((a, p) => a + p.preco, 0) / at.length : 0);
     $('lista-prod').replaceChildren(...D.produtos.map((p) => {
       const r = el('div', 'prod-row' + (p.ativo ? '' : ' off'));
       const t = el('div', 'thumb'); if (p.imagem) { const i = el('img'); i.src = p.imagem; i.alt = ''; t.append(i); } else t.textContent = p.categoria;
-      const tx = el('div'); tx.append(el('b', null, p.nome), el('small', null, `${p.categoria} · ${p.condicao} · ${brl(p.preco)}${p.ativo ? '' : ' · fora da loja'}`));
+      const tx = el('div'); tx.append(el('b', null, p.nome), el('small', null, `${p.categoria} · ${p.condicao}${p.ativo ? '' : ' · fora da loja'}`));
+      const pr = el('div', 'preco'); pr.append(el('b', null, brl(p.preco)), el('small', null, 'à vista'));
       const b = el('button', 'btn sm', 'Editar'); b.type = 'button'; b.onclick = () => abrirProduto(p);
-      r.append(t, tx, b); return r;
+      r.append(t, tx, pr, b); return r;
     }));
   }
   let editando = null, fotoChave = null, fotoNova = null;
