@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wolfs LTDA Investimentos</title>
+<meta name="description" content="iPhone, AirPods e eletrônicos em até 12x no cartão ou no crediário Wolfs. Simule na hora.">
+<meta name="theme-color" content="#07070a">
+<link rel="icon" href="fotos/logo.jpg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="estilo.css">
+<style>
+  .hero { padding-block: 20px 6px; }
+  .banner { width: 100%; aspect-ratio: 1983 / 793; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: #050505 url("fotos/banner.jpg") center / cover no-repeat; box-shadow: 0 30px 60px -40px rgba(255,40,40,.5); }
+  .hero-copy { display: flex; justify-content: space-between; align-items: end; gap: 16px 28px; flex-wrap: wrap; margin-top: 22px; }
+  .hero h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(1.6rem, 3.6vw, 2.4rem); line-height: 1.12; letter-spacing: -.02em; margin: 0; max-width: 22ch; text-wrap: balance; }
+  .hero p { color: var(--muted); margin: 8px 0 0; max-width: 54ch; }
+  .perks { display: flex; gap: 8px; flex-wrap: wrap; }
+  .perk { font-size: .8rem; font-weight: 600; padding: 7px 12px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); white-space: nowrap; }
+  .perk b { color: var(--red); }
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; padding-block: 24px 60px; }
+  @media (max-width: 960px) { .wrap { grid-template-columns: 1fr; } }
+  .shop-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .shop-head h2 { font-family: var(--f-display); font-size: 1.15rem; font-weight: 600; margin: 0; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 12px; font-size: .8rem; font-weight: 600; color: var(--muted); }
+  .chip[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: #fff; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+  .prod { text-align: left; border: 1px solid var(--line); background: var(--panel); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; align-content: start; }
+  .prod:hover { border-color: color-mix(in srgb, var(--red) 55%, var(--line)); }
+  .prod[aria-pressed="true"] { border-color: var(--red); background: linear-gradient(160deg, var(--red-soft), transparent 60%), var(--panel); }
+  .ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--panel2); color: var(--silver); border: 1px solid var(--line); overflow: hidden; flex: none; }
+  .ico svg { width: 22px; height: 22px; }
+  .ico img { width: 100%; height: 100%; object-fit: cover; }
+  .prod .foto { width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; object-fit: cover; background: var(--panel2); }
+  .prod .row { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+  .tag { font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: var(--panel2); color: var(--muted); white-space: nowrap; }
+  .tag.novo { color: var(--ok); }
+  .prod h3 { font-size: .98rem; font-weight: 700; margin: 0; line-height: 1.3; }
+  .prod .price b { font-family: var(--f-display); font-size: 1.3rem; font-weight: 600; display: block; }
+  .prod .price small { color: var(--muted); font-size: .78rem; }
+  .sim { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px); background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: grid; gap: 16px; }
+  @media (max-width: 960px) { .sim { position: static; } }
+  .sim h2 { font-family: var(--f-display); font-size: 1.1rem; font-weight: 600; margin: 0; }
+  .sel { display: flex; gap: 12px; align-items: center; padding: 12px; background: var(--panel2); border-radius: 14px; border: 1px solid var(--line); }
+  .sel b { display: block; font-size: .95rem; }
+  .sel small { color: var(--muted); }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; }
+  .tabs button { border: 0; background: transparent; border-radius: 9px; padding: 9px 4px; font-weight: 700; font-size: .84rem; color: var(--muted); }
+  .tabs button[aria-selected="true"] { background: var(--red); color: #fff; }
+  .big { display: grid; gap: 2px; }
+  .big span { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; }
+  .big b { font-family: var(--f-display); font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
+  .big small { color: var(--muted); font-size: .84rem; }
+  .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; }
+  .opts button, .dias button { border: 1px solid var(--line); background: var(--panel2); border-radius: 10px; padding: 8px 6px; font-weight: 700; font-size: .84rem; }
+  .opts button[aria-pressed="true"], .dias button[aria-pressed="true"] { border-color: var(--red); background: var(--red-soft); }
+  .dias { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cardlist { display: grid; gap: 4px; max-height: 230px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; padding: 6px; }
+  .cardlist button { display: flex; justify-content: space-between; border: 0; background: transparent; border-radius: 8px; padding: 7px 10px; font-size: .84rem; }
+  .cardlist button:hover { background: var(--panel2); }
+  .cardlist button[aria-pressed="true"] { background: var(--red-soft); }
+  .cardlist .t { color: var(--muted); }
+  .range { display: grid; gap: 6px; }
+  .range > label, .range > span { display: flex; justify-content: space-between; font-size: .82rem; color: var(--muted); font-weight: 600; }
+  .range b { color: var(--fg); }
+  .sched { display: grid; gap: 4px; font-size: .84rem; max-height: 260px; overflow-y: auto; }
+  .sched div { display: flex; justify-content: space-between; padding: 6px 10px; border-radius: 8px; background: var(--panel2); }
+  .sched span { color: var(--muted); }
+  form { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
+  form h3, .done h3 { margin: 0; font-size: .98rem; }
+  .done { display: grid; gap: 12px; }
+  .done p { margin: 0; color: var(--muted); font-size: .86rem; }
+  .codigo { font-family: var(--f-mono); font-size: 1.2rem; letter-spacing: .08em; color: var(--fg); }
+  tbody tr.plano { cursor: pointer; }
+  tbody tr.plano:hover td { background: var(--panel2); }
+  tbody tr.plano[aria-selected="true"] td { background: var(--red-soft); }
+  .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px; }
+  .how div { background: var(--panel2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; font-size: .84rem; color: var(--muted); }
+  .how b { display: block; color: var(--fg); font-size: .92rem; margin-bottom: 4px; }
+  .carregando { color: var(--muted); padding: 40px 0; text-align: center; }
+</style>
+</head>
+<body>
+<header class="top gutter">
+  <div class="inner">
+    <a class="brand" href="./"><img src="fotos/logo.jpg" alt="Logo Wolfs"><div><b>WOLFS</b><small>LTDA Investimentos</small></div></a>
+    <button type="button" class="pill-link" data-ir="crediario">Simular crediário</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero gutter">
+    <div class="inner">
+      <div class="banner" role="img" aria-label="Wolfs Investimentos"></div>
+      <div class="hero-copy">
+        <div>
+          <h1 id="chamada">iPhone, AirPods e eletrônicos em até 12x no cartão ou no crediário Wolfs</h1>
+          <p>Escolha o produto, veja na hora quanto fica cada parcela e faça seu pedido. Sem compromisso.</p>
+        </div>
+        <div class="perks"><span class="perk"><b>Pix</b> à vista</span><span class="perk"><b id="pk-cartao">12x</b> no cartão</span><span class="perk"><b>Crediário</b> <span id="pk-juros">1% ao mês</span></span><span class="perk">Procedência conferida</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="gutter"><div class="inner">
+    <nav class="navtabs" role="tablist" aria-label="Seções">
+      <button type="button" role="tab" data-v="loja" aria-selected="true">Loja e simulação</button>
+      <button type="button" role="tab" data-v="crediario" aria-selected="false">Simular crediário</button>
+    </nav>
+  </div></div>
+
+  <p class="carregando" id="carregando">Carregando produtos…</p>
+  <p class="carregando err" id="falha" hidden>Não foi possível carregar a loja agora. Atualize a página em instantes.</p>
+
+  <!-- LOJA -->
+  <div class="gutter" id="v-loja" hidden><div class="inner wrap">
+    <section aria-label="Produtos">
+      <div class="shop-head"><h2>Escolha o produto</h2><div class="chips" id="chips" role="group" aria-label="Categorias"></div></div>
+      <div class="grid" id="grid"></div>
+      <p class="fine" id="rodape" style="margin-top:14px"></p>
+    </section>
+
+    <aside class="sim" aria-label="Simulador">
+      <h2>Simule sua compra</h2>
+      <div class="sel" id="sel"></div>
+      <div class="tabs" role="tablist" aria-label="Forma de pagamento">
+        <button type="button" role="tab" data-f="pix" aria-selected="false">Pix</button>
+        <button type="button" role="tab" data-f="cartao" aria-selected="true">Cartão</button>
+        <button type="button" role="tab" data-f="cred" aria-selected="false">Crediário</button>
+      </div>
+      <div id="p-pix" hidden><div class="big"><span>Pagando no Pix</span><b class="num" id="pix-v">—</b><small>Pagamento à vista na entrega ou retirada.</small></div></div>
+      <div id="p-cartao">
+        <div class="big"><span>No cartão de crédito</span><b class="num" id="ct-v">—</b><small id="ct-s">—</small></div>
+        <div class="cardlist" id="ct-list" role="group" aria-label="Número de parcelas"></div>
+      </div>
+      <div id="p-cred" hidden>
+        <div class="big"><span>Crediário Wolfs <span class="badge-ok" id="cr-badge">1% ao mês</span></span><b class="num" id="cr-v">—</b><small id="cr-s">—</small></div>
+        <div class="range"><label for="cr-ent">Entrada <b class="num" id="cr-ent-v">—</b></label><input type="range" id="cr-ent" min="10" max="80" step="5" value="10"></div>
+        <div class="range"><span>Parcelas</span><div class="opts" id="cr-opts" role="group" aria-label="Parcelas"></div></div>
+        <p class="fine" id="cr-fine"></p>
+        <button type="button" class="cta" id="cred-go">Fazer cadastro do crediário</button>
+      </div>
+      <form id="form" novalidate>
+        <h3>Seus dados para o pedido</h3>
+        <div class="fields">
+          <label class="f full" for="f-nome">Nome completo<input type="text" id="f-nome" autocomplete="name"></label>
+          <label class="f" for="f-tel">WhatsApp<input type="tel" id="f-tel" inputmode="tel" placeholder="(67) 9 9999-9999" autocomplete="tel"></label>
+          <label class="f" for="f-cidade">Cidade / bairro<input type="text" id="f-cidade" autocomplete="address-level2"></label>
+        </div>
+        <label class="consent" for="f-ok"><input type="checkbox" id="f-ok"><span>Autorizo a Wolfs a usar estes dados só para responder meu pedido.</span></label>
+        <p class="err" id="f-err" hidden></p>
+        <button type="submit" class="cta" id="f-enviar">Enviar pedido</button>
+      </form>
+      <div class="done" id="done" hidden></div>
+    </aside>
+  </div></div>
+
+  <!-- CREDIÁRIO -->
+  <div class="gutter" id="v-crediario" hidden><div class="inner wrap">
+    <section class="card" aria-labelledby="c2-t">
+      <h2 id="c2-t">Simule seu crediário Wolfs</h2>
+      <p class="lead" id="c2-lead"></p>
+      <div class="fields">
+        <label class="f" for="c2-prod">Produto<select id="c2-prod"></select></label>
+        <label class="f" for="c2-valor">Valor da compra (R$)<input type="number" id="c2-valor" min="100" step="10" inputmode="decimal"></label>
+      </div>
+      <div class="range"><label for="c2-ent">Entrada <b class="num" id="c2-ent-v">—</b></label><input type="range" id="c2-ent" min="10" max="80" step="5" value="10"></div>
+      <div class="range"><span>Dia do vencimento das parcelas</span><div class="dias" id="c2-dias" role="group" aria-label="Dia do vencimento"></div></div>
+      <div class="tbox"><table>
+        <thead><tr><th>Plano</th><th class="r">Entrada</th><th class="r">Parcela</th><th class="r">Total a prazo</th><th class="r">Última parcela</th></tr></thead>
+        <tbody id="c2-tab"></tbody>
+      </table></div>
+      <div class="how">
+        <div><b>1. Simule</b>Escolha o plano que cabe no seu bolso.</div>
+        <div><b>2. Cadastre</b>Preencha seus dados, endereço e um contato de emergência.</div>
+        <div><b>3. Aprovação</b>Um vendedor fala com você pelo WhatsApp e combina a entrega.</div>
+      </div>
+      <p class="fine" id="c2-fine"></p>
+    </section>
+
+    <aside class="sim" aria-label="Seu plano">
+      <h2>Seu plano</h2>
+      <div class="sel" id="c2-sel"></div>
+      <div class="big"><span>Crediário <span class="badge-ok" id="c2-badge">1% ao mês</span></span><b class="num" id="c2-v">—</b><small id="c2-s">—</small></div>
+      <div class="sched" id="c2-sched"></div>
+      <form id="c2-form" novalidate>
+        <h3>Cadastro do crediário</h3>
+        <p class="sect">Seus dados</p>
+        <div class="fields">
+          <label class="f full" for="c2-nome">Nome completo<input type="text" id="c2-nome" autocomplete="name"></label>
+          <label class="f" for="c2-cpf">CPF<input type="text" id="c2-cpf" inputmode="numeric" placeholder="000.000.000-00" autocomplete="off"></label>
+          <label class="f" for="c2-tel">Telefone / WhatsApp<input type="tel" id="c2-tel" inputmode="tel" placeholder="(67) 9 9999-9999" autocomplete="tel"></label>
+        </div>
+        <p class="sect">Endereço</p>
+        <div class="fields">
+          <label class="f" for="c2-cep">CEP<input type="text" id="c2-cep" inputmode="numeric" placeholder="79000-000" autocomplete="postal-code"></label>
+          <label class="f full" for="c2-rua">Rua / avenida<input type="text" id="c2-rua" autocomplete="address-line1"></label>
+          <label class="f" for="c2-numero">Número<input type="text" id="c2-numero" autocomplete="off"></label>
+          <label class="f" for="c2-compl">Complemento (opcional)<input type="text" id="c2-compl" autocomplete="address-line2"></label>
+          <label class="f" for="c2-bairro">Bairro<input type="text" id="c2-bairro" autocomplete="off"></label>
+          <label class="f" for="c2-cidade">Cidade<input type="text" id="c2-cidade" value="Campo Grande" autocomplete="address-level2"></label>
+          <label class="f" for="c2-uf">UF<input type="text" id="c2-uf" value="MS" maxlength="2" autocomplete="address-level1"></label>
+        </div>
+        <p class="sect">Contato de emergência</p>
+        <div class="fields">
+          <label class="f full" for="c2-en">Nome completo<input type="text" id="c2-en" autocomplete="off"></label>
+          <label class="f" for="c2-ep">Parentesco<input type="text" id="c2-ep" placeholder="Mãe, irmão, cônjuge…" autocomplete="off"></label>
+          <label class="f" for="c2-et">Telefone<input type="tel" id="c2-et" inputmode="tel" autocomplete="off"></label>
+        </div>
+        <label class="consent" for="c2-ok"><input type="checkbox" id="c2-ok"><span>Autorizo a Wolfs a usar estes dados para analisar meu crediário e enviar lembretes das parcelas. O contato de emergência sabe e concorda em ser informado.</span></label>
+        <p class="err" id="c2-err" hidden></p>
+        <button type="submit" class="cta" id="c2-enviar">Enviar cadastro</button>
+      </form>
+      <div class="done" id="c2-done" hidden></div>
+    </aside>
+  </div></div>
+</main>
+
+<footer class="gutter"><div class="inner"><span id="ft-nome">© Wolfs LTDA Investimentos</span><span>Simulação sem compromisso. Valores confirmados no atendimento.</span></div></footer>
+
+<script>
+(() => {
+  const API = "https://ccgnncfjqvbvxutdnmja.supabase.co/functions/v1/wolfs/";
+  const ICONES = {
+    'iPhone': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 5h3"/></svg>',
+    'Celular': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><circle cx="12" cy="18" r=".8"/></svg>',
+    'Fone (AirPods)': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5a2.5 2.5 0 0 1 2.5 2.5v2a2 2 0 0 1-1.5 1.9V19a1 1 0 0 1-2 0v-8.1A2.5 2.5 0 0 1 7 4.5z"/><path d="M17 4.5A2.5 2.5 0 0 0 14.5 7v2a2 2 0 0 0 1.5 1.9V19a1 1 0 0 0 2 0v-8.1A2.5 2.5 0 0 0 17 4.5z"/></svg>',
+    'Relógio': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="3.5"/><path d="M9 6l.6-3.5h4.8L15 6M9 18l.6 3.5h4.8L15 18M12 9.5V12l1.6 1"/></svg>',
+    'Caixa de som': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="5"/><circle cx="9" cy="12" r="2.2"/><circle cx="15" cy="12" r="2.2"/></svg>',
+    'Outro': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg>',
+  };
+  const $ = (id) => document.getElementById(id);
+  const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+  const brl = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const brl0 = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  const pctTxt = (v) => String(v).replace('.', ',');
+  const dataBR = (iso) => new Date(iso + 'T12:00').toLocaleDateString('pt-BR');
+  const hojeISO = () => new Date().toLocaleDateString('sv');
+  const digitos = (s) => String(s || '').replace(/\D/g, '');
+  const somaMeses = (iso, k) => { const [y, m, d] = iso.split('-').map(Number); const a = new Date(Date.UTC(y, m - 1 + k, 1)); const u = new Date(Date.UTC(a.getUTCFullYear(), a.getUTCMonth() + 1, 0)).getUTCDate(); a.setUTCDate(Math.min(d, u)); return a.toISOString().slice(0, 10); };
+  const icone = (p, cls) => { const d = el('div', cls || 'ico'); if (p.imagem) { const i = el('img'); i.src = p.imagem; i.alt = ''; i.loading = 'lazy'; d.append(i); } else d.innerHTML = ICONES[p.categoria] || ICONES.Outro; return d; };
+  async function api(path, opts = {}) {
+    const r = await fetch(API + path, { ...opts, headers: { 'content-type': 'application/json', ...(opts.headers || {}) } });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.erro || 'Não foi possível concluir agora. Tente de novo.');
+    return d;
+  }
+
+  let CFG = null, PRODUTOS = [];
+  let cat = '', prod = null, forma = 'cartao', nCartao = 12, entradaPct = 10, nCred = 4;
+  let c2 = { prodId: '', valor: 0, ent: 10, n: 4, dia: 10 };
+
+  const taxa = (n) => Number(CFG.taxasCartao[n] ?? CFG.taxasCartao[String(n)] ?? 0);
+  const cartaoTotal = (p, n) => p / (1 - taxa(n) / 100);
+  function parcelar(resto, n, primeiro) {
+    const i = Math.min(Number(CFG.jurosMes) || 0, 1) / 100;
+    const pmt = i > 0 ? resto * i / (1 - Math.pow(1 + i, -n)) : resto / n;
+    const valor = Math.round(pmt * 100) / 100;
+    return Array.from({ length: n }, (_, k) => ({ n: k + 1, venc: somaMeses(primeiro, k), valor }));
+  }
+  function primeiroVenc(dia) {
+    const h = new Date(hojeISO() + 'T12:00'); const y = h.getFullYear(), m = h.getMonth() + 1;
+    let alvo = new Date(Date.UTC(y, m, dia));
+    if ((alvo - new Date(Date.UTC(h.getFullYear(), h.getMonth(), h.getDate()))) / 864e5 < 20) alvo = new Date(Date.UTC(y, m + 1, dia));
+    return alvo.toISOString().slice(0, 10);
+  }
+  function plano(valor, pct, n, primeiro) {
+    const entrada = Math.ceil(Math.round(valor * 100) * pct / 100) / 100, resto = Math.round((valor - entrada) * 100) / 100;
+    const parcelas = parcelar(resto, n, primeiro);
+    return { entrada, resto, parcelas, primeiro, total: entrada + parcelas.reduce((a, p) => a + p.valor, 0) };
+  }
+  const jurosTxt = () => Number(CFG.jurosMes) > 0 ? `${pctTxt(CFG.jurosMes)}% ao mês` : 'sem juros';
+  const anual = () => ((Math.pow(1 + Number(CFG.jurosMes) / 100, 12) - 1) * 100).toFixed(2).replace('.', ',');
+
+  /* ---------- Loja ---------- */
+  function drawChips() {
+    const cats = ['', ...new Set(PRODUTOS.map((p) => p.categoria))];
+    $('chips').replaceChildren(...cats.map((c) => { const b = el('button', 'chip', c || 'Todos'); b.type = 'button'; b.setAttribute('aria-pressed', String(c === cat)); b.onclick = () => { cat = c; drawChips(); drawGrid(); }; return b; }));
+  }
+  function drawGrid() {
+    $('grid').replaceChildren(...PRODUTOS.filter((p) => !cat || p.categoria === cat).map((p) => {
+      const b = el('button', 'prod'); b.type = 'button'; b.setAttribute('aria-pressed', String(p === prod));
+      if (p.imagem) { const i = el('img', 'foto'); i.src = p.imagem; i.alt = p.nome; i.loading = 'lazy'; b.append(i); }
+      const row = el('div', 'row'); if (!p.imagem) row.append(icone(p)); else row.append(el('span'));
+      row.append(el('span', 'tag' + (p.condicao === 'Novo' ? ' novo' : ''), p.condicao));
+      const pr = el('div', 'price'); pr.append(el('b', 'num', brl0(p.preco)), el('small', null, `no Pix ou ${CFG.cartaoMax}x de ${brl(cartaoTotal(p.preco, CFG.cartaoMax) / CFG.cartaoMax)}`));
+      b.append(row, el('h3', null, p.nome)); if (p.descricao) b.append(el('small', 'fine', p.descricao)); b.append(pr);
+      b.onclick = () => { prod = p; drawGrid(); drawSim(); if (matchMedia('(max-width: 960px)').matches) document.querySelector('#v-loja .sim').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+      return b;
+    }));
+  }
+  document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => { forma = b.dataset.f; drawSim(); }));
+  $('cr-ent').addEventListener('input', () => { entradaPct = Number($('cr-ent').value); drawSim(); });
+  function drawSim() {
+    if (!prod) return;
+    const t = el('div'); t.append(el('b', null, prod.nome), el('small', null, `${prod.condicao} · à vista ${brl0(prod.preco)}`));
+    $('sel').replaceChildren(icone(prod), t);
+    document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.f === forma)));
+    $('p-pix').hidden = forma !== 'pix'; $('p-cartao').hidden = forma !== 'cartao'; $('p-cred').hidden = forma !== 'cred';
+    $('form').hidden = forma === 'cred' || !$('done').hidden; if (forma === 'cred') $('done').hidden = true;
+    $('pix-v').textContent = brl(prod.preco);
+    nCartao = Math.min(nCartao, CFG.cartaoMax);
+    const tot = cartaoTotal(prod.preco, nCartao);
+    $('ct-v').textContent = `${nCartao}x de ${brl(tot / nCartao)}`;
+    $('ct-s').textContent = `Total no cartão ${brl(tot)}`;
+    $('ct-list').replaceChildren(...Array.from({ length: CFG.cartaoMax }, (_, i) => i + 1).map((n) => {
+      const tt = cartaoTotal(prod.preco, n); const b = el('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(n === nCartao));
+      b.append(el('span', 'num', `${n}x de ${brl(tt / n)}`), el('span', 't num', brl(tt))); b.onclick = () => { nCartao = n; drawSim(); }; return b;
+    }));
+    nCred = Math.min(Math.max(nCred, 2), CFG.credMax);
+    const c = plano(prod.preco, entradaPct, nCred, primeiroVenc(c2.dia));
+    $('cr-v').textContent = `${brl(c.entrada)} + ${nCred}x de ${brl(c.parcelas[0].valor)}`;
+    $('cr-s').textContent = `Total a prazo ${brl(c.total)} · à vista ${brl(prod.preco)}`;
+    $('cr-ent-v').textContent = `${entradaPct}% · ${brl(c.entrada)}`;
+    $('cr-opts').replaceChildren(...Array.from({ length: CFG.credMax - 1 }, (_, i) => i + 2).map((n) => { const b = el('button', 'num', `${n}x`); b.type = 'button'; b.setAttribute('aria-pressed', String(n === nCred)); b.onclick = () => { nCred = n; drawSim(); }; return b; }));
+  }
+  $('cred-go').addEventListener('click', () => { c2.prodId = String(prod.id); c2.valor = prod.preco; c2.ent = entradaPct; c2.n = nCred; $('c2-prod').value = c2.prodId; $('c2-valor').value = prod.preco; $('c2-ent').value = entradaPct; drawC2(); irPara('crediario'); });
+
+  function mostrarFeito(box, r, credi) {
+    const aviso = el('div', 'aviso-ok'); aviso.append(el('b', null, credi ? 'Cadastro recebido!' : 'Pedido recebido!'), el('span', null, credi ? CFG.avisoAprovacao : CFG.avisoPedido));
+    const cod = el('p'); cod.append(document.createTextNode('Número do seu pedido: '), el('span', 'codigo', r.codigo));
+    let resumo;
+    if (r.forma === 'Crediário próprio') resumo = `${r.produtoNome}: entrada ${brl(r.entrada)} + ${r.parcelas}x de ${brl(r.valorParcela)} (${pctTxt(r.jurosMes)}% ao mês), 1ª parcela em ${dataBR(r.primeiroVenc)}. Total a prazo ${brl(r.total)}.`;
+    else if (r.forma === 'Pix') resumo = `${r.produtoNome}: ${brl(r.total)} no Pix.`;
+    else resumo = `${r.produtoNome}: ${r.parcelas}x de ${brl(r.valorParcela)} no cartão (total ${brl(r.total)}).`;
+    const parts = [aviso, cod, el('p', null, resumo)];
+    if (CFG.whatsapp) {
+      const a = el('a', 'wa', 'Falar com a Wolfs no WhatsApp'); a.target = '_blank'; a.rel = 'noopener';
+      a.href = `https://wa.me/${CFG.whatsapp.length <= 11 ? '55' + CFG.whatsapp : CFG.whatsapp}?text=${encodeURIComponent(`Olá! Acabei de fazer o pedido ${r.codigo} no site da Wolfs.`)}`;
+      parts.push(a);
+    }
+    box.replaceChildren(...parts); box.hidden = false;
+  }
+
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome = $('f-nome').value.trim(), tel = $('f-tel').value.trim();
+    const erro = nome.split(/\s+/).length < 2 ? 'Coloque seu nome e sobrenome.' : digitos(tel).length < 10 ? 'Coloque seu WhatsApp com DDD.' : !$('f-ok').checked ? 'Marque a autorização para respondermos seu pedido.' : '';
+    if (erro) { $('f-err').textContent = erro; $('f-err').hidden = false; return; }
+    const b = $('f-enviar'); b.disabled = true; b.textContent = 'Enviando…'; $('f-err').hidden = true;
+    try {
+      const r = await api('pedidos', { method: 'POST', body: JSON.stringify({ produtoId: prod.id, forma: forma === 'pix' ? 'Pix' : 'Cartão', parcelas: nCartao, nome, telefone: tel, cidade: $('f-cidade').value.trim() }) });
+      $('form').hidden = true; mostrarFeito($('done'), r, false);
+    } catch (err) { $('f-err').textContent = err.message; $('f-err').hidden = false; }
+    finally { b.disabled = false; b.textContent = 'Enviar pedido'; }
+  });
+
+  /* ---------- Crediário ---------- */
+  function nomeC2() { const p = PRODUTOS.find((x) => String(x.id) === c2.prodId); return p || { nome: 'Compra no valor de ' + brl0(c2.valor), categoria: 'Outro', condicao: 'Valor informado por você', preco: c2.valor, livre: true }; }
+  function drawC2() {
+    $('c2-ent-v').textContent = `${c2.ent}% · ${brl(Math.ceil(Math.round(c2.valor * 100) * c2.ent / 100) / 100)}`;
+    [...$('c2-dias').children].forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.d) === c2.dia)));
+    const ok = c2.valor >= 100, primeiro = primeiroVenc(c2.dia);
+    c2.n = Math.min(Math.max(c2.n, 2), CFG.credMax);
+    $('c2-tab').replaceChildren(...(ok ? Array.from({ length: CFG.credMax - 1 }, (_, i) => i + 2) : []).map((n) => {
+      const pl = plano(c2.valor, c2.ent, n, primeiro); const tr = el('tr', 'plano'); tr.setAttribute('aria-selected', String(n === c2.n)); tr.tabIndex = 0;
+      tr.append(el('td', null, `${n}x`), el('td', 'r', brl(pl.entrada)), el('td', 'r', brl(pl.parcelas[0].valor)), el('td', 'r', brl(pl.total)), el('td', 'r', dataBR(pl.parcelas[n - 1].venc)));
+      const pick = () => { c2.n = n; drawC2(); }; tr.onclick = pick; tr.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } };
+      return tr;
+    }));
+    const pr = nomeC2(); const t = el('div'); t.append(el('b', null, pr.nome), el('small', null, pr.livre ? 'Valor informado por você' : `${pr.condicao} · à vista ${brl0(pr.preco)}`));
+    $('c2-sel').replaceChildren(icone(pr), t);
+    if (!ok) { $('c2-v').textContent = '—'; $('c2-s').textContent = 'Digite um valor a partir de R$ 100.'; $('c2-sched').replaceChildren(); return; }
+    const pl = plano(c2.valor, c2.ent, c2.n, primeiro);
+    $('c2-v').textContent = `${brl(pl.entrada)} + ${c2.n}x de ${brl(pl.parcelas[0].valor)}`;
+    $('c2-s').textContent = `Total a prazo ${brl(pl.total)} · à vista ${brl(c2.valor)} · parcelas todo dia ${c2.dia}`;
+    $('c2-sched').replaceChildren(...[{ n: 'e', valor: pl.entrada }, ...pl.parcelas].map((p) => { const d = el('div'); d.append(el('span', null, p.n === 'e' ? 'Entrada · na compra' : `${p.n}ª parcela · ${dataBR(p.venc)}`), el('b', 'num', brl(p.valor))); return d; }));
+  }
+  $('c2-prod').addEventListener('change', () => { c2.prodId = $('c2-prod').value; const p = PRODUTOS.find((x) => String(x.id) === c2.prodId); if (p) { c2.valor = p.preco; $('c2-valor').value = p.preco; } else $('c2-valor').focus(); drawC2(); });
+  $('c2-valor').addEventListener('input', () => { const v = Number($('c2-valor').value); c2.valor = v > 0 ? v : 0; const p = PRODUTOS.find((x) => String(x.id) === c2.prodId); if (p && p.preco !== c2.valor && CFG.valorLivre) { c2.prodId = ''; $('c2-prod').value = ''; } drawC2(); });
+  $('c2-ent').addEventListener('input', () => { c2.ent = Number($('c2-ent').value); drawC2(); });
+
+  const fmtCPF = (v) => { const d = digitos(v); return d.length === 11 ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}` : v; };
+  const cpfValido = (v) => { const d = digitos(v); if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false; const dv = (n) => { let t = 0; for (let i = 0; i < n; i++) t += Number(d[i]) * (n + 1 - i); const r = (t * 10) % 11; return r === 10 ? 0 : r; }; return dv(9) === Number(d[9]) && dv(10) === Number(d[10]); };
+  $('c2-cpf').addEventListener('blur', () => { $('c2-cpf').value = fmtCPF($('c2-cpf').value); });
+  $('c2-cep').addEventListener('blur', async () => {
+    const d = digitos($('c2-cep').value); if (d.length !== 8) return;
+    $('c2-cep').value = `${d.slice(0, 5)}-${d.slice(5)}`;
+    try {
+      const j = await (await fetch(`https://viacep.com.br/ws/${d}/json/`)).json();
+      if (j && !j.erro) { if (j.logradouro && !$('c2-rua').value) $('c2-rua').value = j.logradouro; if (j.bairro && !$('c2-bairro').value) $('c2-bairro').value = j.bairro; if (j.localidade) $('c2-cidade').value = j.localidade; if (j.uf) $('c2-uf').value = j.uf; $('c2-numero').focus(); }
+    } catch { /* sem internet para o CEP: preenchimento manual */ }
+  });
+  $('c2-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v = (id) => $(id).value.trim();
+    const f = { nome: v('c2-nome'), cpf: v('c2-cpf'), tel: v('c2-tel'), cep: v('c2-cep'), rua: v('c2-rua'), numero: v('c2-numero'), compl: v('c2-compl'), bairro: v('c2-bairro'), cidade: v('c2-cidade'), uf: v('c2-uf').toUpperCase(), en: v('c2-en'), ep: v('c2-ep'), et: v('c2-et') };
+    const checks = [
+      [c2.valor >= 100, 'c2-valor', 'Digite o valor da compra.'],
+      [f.nome.split(/\s+/).length >= 2, 'c2-nome', 'Coloque seu nome completo.'],
+      [cpfValido(f.cpf), 'c2-cpf', 'CPF inválido. Confira os 11 números.'],
+      [digitos(f.tel).length >= 10, 'c2-tel', 'Coloque seu telefone com DDD.'],
+      [digitos(f.cep).length === 8, 'c2-cep', 'CEP precisa ter 8 números.'],
+      [f.rua.length >= 3, 'c2-rua', 'Coloque o nome da rua.'],
+      [f.numero.length >= 1, 'c2-numero', 'Coloque o número da casa (ou S/N).'],
+      [f.bairro.length >= 2, 'c2-bairro', 'Coloque o bairro.'],
+      [f.cidade.length >= 2 && /^[A-Za-z]{2}$/.test(f.uf), 'c2-cidade', 'Coloque a cidade e a UF (ex.: MS).'],
+      [f.en.split(/\s+/).length >= 2, 'c2-en', 'Coloque o nome completo do contato de emergência.'],
+      [f.ep.length >= 2, 'c2-ep', 'Diga o parentesco do contato de emergência.'],
+      [digitos(f.et).length >= 10, 'c2-et', 'Coloque o telefone do contato de emergência com DDD.'],
+      [digitos(f.et) !== digitos(f.tel), 'c2-et', 'O contato de emergência precisa ter outro telefone, diferente do seu.'],
+      [$('c2-ok').checked, 'c2-ok', 'Marque a autorização para analisarmos seu crediário.'],
+    ];
+    const falha = checks.find(([ok]) => !ok);
+    if (falha) { $('c2-err').textContent = falha[2]; $('c2-err').hidden = false; $(falha[1]).focus(); return; }
+    const b = $('c2-enviar'); b.disabled = true; b.textContent = 'Enviando…'; $('c2-err').hidden = true;
+    try {
+      const r = await api('pedidos', { method: 'POST', body: JSON.stringify({
+        produtoId: c2.prodId ? Number(c2.prodId) : null, valor: c2.valor, forma: 'Crediário próprio', parcelas: c2.n, entradaPct: c2.ent, dia: c2.dia,
+        nome: f.nome, cpf: f.cpf, telefone: f.tel, cep: f.cep, rua: f.rua, numero: f.numero, complemento: f.compl, bairro: f.bairro, cidade: f.cidade, uf: f.uf,
+        emergNome: f.en, emergParentesco: f.ep, emergTel: f.et,
+      }) });
+      $('c2-form').hidden = true; mostrarFeito($('c2-done'), r, true); $('c2-done').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) { $('c2-err').textContent = err.message; $('c2-err').hidden = false; }
+    finally { b.disabled = false; b.textContent = 'Enviar cadastro'; }
+  });
+
+  /* ---------- Abas ---------- */
+  function irPara(v) {
+    if (!['loja', 'crediario'].includes(v)) v = 'loja';
+    $('v-loja').hidden = v !== 'loja'; $('v-crediario').hidden = v !== 'crediario';
+    document.querySelectorAll('.navtabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.v === v)));
+    if (location.hash.slice(1) !== v) history.replaceState(null, '', '#' + v);
+  }
+  document.querySelectorAll('.navtabs button').forEach((b) => b.addEventListener('click', () => irPara(b.dataset.v)));
+  document.querySelectorAll('[data-ir]').forEach((b) => b.addEventListener('click', () => { irPara(b.dataset.ir); document.querySelector('.navtabs').scrollIntoView({ behavior: 'smooth' }); }));
+  window.addEventListener('hashchange', () => irPara(location.hash.slice(1)));
+
+  /* ---------- Início ---------- */
+  (async () => {
+    try {
+      const d = await api('loja'); CFG = d.config; PRODUTOS = d.produtos;
+      document.title = CFG.nomeSite; $('ft-nome').textContent = '© ' + CFG.nomeSite + (CFG.cidade ? ' · ' + CFG.cidade : '');
+      if (CFG.chamada) $('chamada').textContent = CFG.chamada;
+      $('pk-cartao').textContent = CFG.cartaoMax + 'x'; $('pk-juros').textContent = jurosTxt(); $('cr-badge').textContent = jurosTxt(); $('c2-badge').textContent = jurosTxt();
+      $('rodape').textContent = CFG.rodape || '';
+      const regra = `Crediário sujeito a análise. Entrada mínima de ${CFG.entradaMin}%, até ${CFG.credMax} parcelas mensais${Number(CFG.jurosMes) > 0 ? ` e juros de ${pctTxt(CFG.jurosMes)}% ao mês (${anual()}% ao ano) sobre o valor parcelado` : ' sem juros'}.`;
+      $('cr-fine').textContent = regra; $('c2-fine').textContent = regra;
+      $('c2-lead').textContent = `Escolha o produto${CFG.valorLivre ? ' ou digite o valor' : ''}, ajuste a entrada e o dia do vencimento. Você vê o total a prazo antes de pedir.`;
+      ['cr-ent', 'c2-ent'].forEach((id) => { $(id).min = CFG.entradaMin; $(id).value = CFG.entradaMin; });
+      entradaPct = CFG.entradaMin; c2.ent = CFG.entradaMin; c2.dia = CFG.diasVencimento.includes(10) ? 10 : CFG.diasVencimento[0];
+      $('c2-dias').replaceChildren(...CFG.diasVencimento.map((dd) => { const b = el('button', 'num', `Dia ${dd}`); b.type = 'button'; b.dataset.d = dd; b.onclick = () => { c2.dia = dd; drawC2(); }; return b; }));
+      $('c2-valor').readOnly = !CFG.valorLivre;
+      const opts = PRODUTOS.map((p) => new Option(`${p.nome} (${p.condicao}) · ${brl0(p.preco)}`, String(p.id)));
+      if (CFG.valorLivre) opts.push(new Option('Outro valor (digitar)', ''));
+      $('c2-prod').replaceChildren(...opts);
+      prod = PRODUTOS[0] || null;
+      if (prod) { c2.prodId = String(prod.id); c2.valor = prod.preco; $('c2-prod').value = c2.prodId; $('c2-valor').value = prod.preco; }
+      $('carregando').hidden = true;
+      drawChips(); drawGrid(); drawSim(); drawC2();
+      irPara(location.hash.slice(1));
+    } catch { $('carregando').hidden = true; $('falha').hidden = false; }
+  })();
+})();
+</script>
+</body>
+</html>

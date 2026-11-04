@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel Wolfs</title>
+<meta name="theme-color" content="#07070a">
+<link rel="icon" href="fotos/logo.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="estilo.css">
+<style>
+  main { padding-block: 20px 60px; display: grid; gap: 18px; }
+  .login { max-width: 380px; margin: 60px auto; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .kpi span { font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 700; }
+  .kpi b { display: block; font-family: var(--f-display); font-size: 1.45rem; font-weight: 600; margin-top: 6px; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .toolbar input[type=search] { flex: 1 1 220px; width: auto; }
+  .toolbar select { width: auto; }
+  .ped { border: 1px solid var(--line); background: var(--panel); border-radius: 16px; padding: 16px; display: grid; gap: 10px; }
+  .ped-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: start; }
+  .ped-top b { font-size: 1rem; }
+  .ped-top small { color: var(--muted); display: block; }
+  .ped-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 8px 16px; font-size: .86rem; }
+  .ped-info div span { display: block; font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+  .ped-acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .ped-acts select { width: auto; }
+  .prod-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--line); background: var(--panel); border-radius: 14px; padding: 10px 12px; }
+  .prod-row.off { opacity: .55; }
+  .thumb { width: 56px; height: 56px; border-radius: 12px; background: var(--panel2); border: 1px solid var(--line); object-fit: cover; display: grid; place-items: center; color: var(--muted); font-size: .7rem; overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .prod-row b { display: block; }
+  .prod-row small { color: var(--muted); }
+  .overlay { position: fixed; inset: 0; z-index: 20; background: rgba(5,8,12,.7); display: grid; place-items: start center; overflow-y: auto; padding: 24px 12px; }
+  .modal { width: min(620px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: grid; gap: 14px; }
+  .modal h3 { margin: 0; font-family: var(--f-display); }
+  .row-end { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .taxas { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: .86rem; }
+  .check input { accent-color: var(--red); }
+</style>
+</head>
+<body>
+<header class="top gutter">
+  <div class="inner">
+    <a class="brand" href="./" target="_blank" rel="noopener"><img src="fotos/logo.jpg" alt="Logo Wolfs"><div><b>WOLFS</b><small>Painel do administrador</small></div></a>
+    <button type="button" class="pill-link" id="sair" hidden>Sair</button>
+  </div>
+</header>
+
+<main class="gutter">
+  <div class="inner">
+    <section class="card login" id="login">
+      <h2>Entrar no painel</h2>
+      <p class="lead">Área só do administrador da Wolfs.</p>
+      <form id="login-form" novalidate style="border:0;padding:0;display:grid;gap:10px">
+        <label class="f" for="senha">Senha<input type="password" id="senha" autocomplete="current-password"></label>
+        <p class="err" id="login-err" hidden></p>
+        <button type="submit" class="cta">Entrar</button>
+      </form>
+    </section>
+
+    <div id="app" hidden style="display:grid;gap:18px">
+      <nav class="navtabs" role="tablist" aria-label="Seções">
+        <button type="button" role="tab" data-t="pedidos" aria-selected="true">Pedidos <span class="count" id="n-ped">0</span></button>
+        <button type="button" role="tab" data-t="produtos" aria-selected="false">Produtos <span class="count" id="n-prod">0</span></button>
+        <button type="button" role="tab" data-t="config" aria-selected="false">Configurações</button>
+      </nav>
+
+      <!-- PEDIDOS -->
+      <section id="t-pedidos" style="display:grid;gap:14px">
+        <div class="kpis">
+          <div class="kpi"><span>Novos</span><b id="k-novos">0</b></div>
+          <div class="kpi"><span>Em análise</span><b id="k-analise">0</b></div>
+          <div class="kpi"><span>Aprovados</span><b id="k-aprov">0</b></div>
+          <div class="kpi"><span>Valor dos aprovados</span><b id="k-valor">R$ 0</b></div>
+        </div>
+        <div class="toolbar">
+          <input type="search" id="busca" placeholder="Buscar nome, CPF, telefone, produto ou código" aria-label="Buscar pedidos">
+          <select id="f-status" aria-label="Status"><option value="">Todos os status</option><option value="novo">Novo</option><option value="em_analise">Em análise</option><option value="aprovado">Aprovado</option><option value="recusado">Recusado</option><option value="concluido">Concluído</option><option value="cancelado">Cancelado</option></select>
+          <select id="f-forma" aria-label="Forma"><option value="">Todas as formas</option><option>Crediário próprio</option><option>Pix</option><option>Crédito parcelado</option><option>Crédito à vista</option></select>
+          <button type="button" class="btn" id="atualizar">Atualizar</button>
+        </div>
+        <div id="lista-ped" style="display:grid;gap:10px"></div>
+        <p class="fine" id="vazio-ped" hidden>Nenhum pedido por aqui ainda. Quando um cliente enviar um pedido pelo site, ele aparece nesta lista.</p>
+      </section>
+
+      <!-- PRODUTOS -->
+      <section id="t-produtos" hidden style="display:grid;gap:14px">
+        <div class="row-end"><p class="lead" style="margin:0">Os produtos ativos aparecem na loja na ordem abaixo. O preço é sempre o valor à vista.</p><button type="button" class="btn primary" id="novo-prod">+ Novo produto</button></div>
+        <div id="lista-prod" style="display:grid;gap:8px"></div>
+      </section>
+
+      <!-- CONFIGURAÇÕES -->
+      <section id="t-config" hidden>
+        <form class="card" id="cfg-form" novalidate style="border-top:1px solid var(--line)">
+          <h2>Configurações da loja</h2>
+          <p class="sect">Loja</p>
+          <div class="fields">
+            <label class="f" for="c-nome">Nome do site<input type="text" id="c-nome"></label>
+            <label class="f" for="c-whats">WhatsApp da Wolfs (com DDD)<input type="tel" id="c-whats" placeholder="67999990000"></label>
+            <label class="f" for="c-cidade">Cidade<input type="text" id="c-cidade"></label>
+            <label class="f full" for="c-chamada">Frase do topo<input type="text" id="c-chamada"></label>
+            <label class="f full" for="c-rodape">Aviso abaixo dos produtos<input type="text" id="c-rodape"></label>
+          </div>
+          <p class="sect">Crediário</p>
+          <div class="fields">
+            <label class="f" for="c-ent">Entrada mínima (%)<input type="number" id="c-ent" min="0" max="90"></label>
+            <label class="f" for="c-max">Máximo de parcelas<input type="number" id="c-max" min="2" max="24"></label>
+            <label class="f" for="c-juros">Juros ao mês (%, máx. 1)<input type="number" id="c-juros" min="0" max="1" step="0.1"></label>
+            <label class="f" for="c-dias">Dias de vencimento (separe por vírgula)<input type="text" id="c-dias" placeholder="5, 10, 15, 20, 25"></label>
+            <label class="check full" for="c-livre"><input type="checkbox" id="c-livre"> Cliente pode simular um valor que não está na vitrine</label>
+            <label class="f full" for="c-aviso">Mensagem depois do cadastro do crediário<textarea id="c-aviso"></textarea></label>
+            <label class="f full" for="c-aviso2">Mensagem depois de um pedido no Pix ou cartão<textarea id="c-aviso2"></textarea></label>
+          </div>
+          <p class="sect">Cartão</p>
+          <div class="fields"><label class="f" for="c-cmax">Máximo de parcelas no cartão<input type="number" id="c-cmax" min="1" max="12"></label></div>
+          <div class="taxas" id="c-taxas"></div>
+          <p class="fine">Taxa da maquininha em % para cada número de parcelas. O cliente paga a taxa embutida no preço do cartão.</p>
+          <p class="err" id="cfg-err" hidden></p>
+          <button type="submit" class="cta" id="cfg-salvar">Salvar configurações</button>
+        </form>
+      </section>
+    </div>
+  </div>
+</main>
+
+<div class="overlay" id="m-prod" hidden>
+  <form class="modal" id="prod-form" novalidate>
+    <h3 id="prod-t">Produto</h3>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div class="thumb" id="p-thumb" style="width:84px;height:84px">sem foto</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn sm" id="p-foto-btn">Escolher foto</button>
+        <button type="button" class="btn sm danger" id="p-foto-rem" hidden>Remover foto</button>
+        <input type="file" id="p-foto" accept="image/jpeg,image/png,image/webp" hidden>
+      </div>
+    </div>
+    <div class="fields">
+      <label class="f full" for="p-nome">Nome<input type="text" id="p-nome" placeholder="iPhone 13 128GB"></label>
+      <label class="f" for="p-cat">Categoria<select id="p-cat"></select></label>
+      <label class="f" for="p-cond">Condição<select id="p-cond"><option>Novo</option><option>Seminovo</option><option>Usado</option></select></label>
+      <label class="f" for="p-preco">Preço à vista (R$)<input type="number" id="p-preco" min="1" step="1"></label>
+      <label class="f" for="p-ordem">Ordem na loja<input type="number" id="p-ordem" step="1"></label>
+      <label class="f full" for="p-desc">Descrição curta (opcional)<input type="text" id="p-desc" placeholder="Bateria 90%, com caixa"></label>
+      <label class="check full" for="p-ativo"><input type="checkbox" id="p-ativo" checked> Mostrar na loja</label>
+    </div>
+    <p class="err" id="prod-err" hidden></p>
+    <div class="row-end">
+      <span id="p-apagar-box"></span>
+      <div style="display:flex;gap:8px"><button type="button" class="btn" id="prod-cancelar">Cancelar</button><button type="submit" class="btn primary" id="prod-salvar">Salvar</button></div>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const API = "https://ccgnncfjqvbvxutdnmja.supabase.co/functions/v1/wolfs/";
+  const $ = (id) => document.getElementById(id);
+  const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+  const brl = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const dataBR = (iso) => iso ? new Date(String(iso).slice(0, 10) + 'T12:00').toLocaleDateString('pt-BR') : '—';
+  const dataHora = (iso) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const digitos = (s) => String(s || '').replace(/\D/g, '');
+  const toast = (t) => { const e = $('toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { e.hidden = true; }, 2400); };
+  const STATUS = { novo: 'Novo', em_analise: 'Em análise', aprovado: 'Aprovado', recusado: 'Recusado', concluido: 'Concluído', cancelado: 'Cancelado' };
+
+  let TOKEN = '';
+  try { TOKEN = sessionStorage.getItem('wolfs-token') || ''; } catch {}
+  let D = { config: null, produtos: [], pedidos: [] };
+
+  async function api(path, opts = {}) {
+    const r = await fetch(API + path, { ...opts, headers: { 'content-type': 'application/json', 'x-admin-token': TOKEN, ...(opts.headers || {}) } });
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 401 && path !== 'admin/login') { sair(); throw new Error(d.erro || 'Entre de novo.'); }
+    if (!r.ok) throw new Error(d.erro || 'Não foi possível concluir agora.');
+    return d;
+  }
+  function sair() { TOKEN = ''; try { sessionStorage.removeItem('wolfs-token'); } catch {} $('app').hidden = true; $('sair').hidden = true; $('login').hidden = false; }
+  $('sair').addEventListener('click', sair);
+  $('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault(); $('login-err').hidden = true;
+    try { const r = await api('admin/login', { method: 'POST', body: JSON.stringify({ senha: $('senha').value }) }); TOKEN = r.token; try { sessionStorage.setItem('wolfs-token', TOKEN); } catch {} $('senha').value = ''; await carregar(); }
+    catch (err) { $('login-err').textContent = err.message; $('login-err').hidden = false; }
+  });
+
+  async function carregar() {
+    D = await api('admin/resumo');
+    $('login').hidden = true; $('app').hidden = false; $('sair').hidden = false;
+    desenharPedidos(); desenharProdutos(); preencherConfig();
+  }
+  $('atualizar').addEventListener('click', () => carregar().then(() => toast('Atualizado')).catch((e) => toast(e.message)));
+
+  document.querySelectorAll('.navtabs button').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.navtabs button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    ['pedidos', 'produtos', 'config'].forEach((t) => { $('t-' + t).hidden = t !== b.dataset.t; });
+  }));
+
+  /* ---------- Pedidos ---------- */
+  function codigoPainel(p) {
+    const dados = { v: 1, id: p.codigo, data: String(p.criadoEm).slice(0, 10), nome: p.nome, tel: p.telefone, cidade: [p.bairro, p.cidade && p.uf ? `${p.cidade}/${p.uf}` : p.cidade].filter(Boolean).join(' · '), cpf: p.cpf || '', cep: p.cep || '',
+      endereco: p.rua ? `${p.rua}, ${p.numero}${p.complemento ? ' - ' + p.complemento : ''} - ${p.bairro}, ${p.cidade}/${p.uf}` : '', emerg_nome: p.emergNome || '', emerg_parentesco: p.emergParentesco || '', emerg_tel: p.emergTel || '',
+      produto: p.produtoNome, cat: p.categoria, cond: p.condicao, preco: p.preco, forma: p.forma, parcelas: p.parcelas, taxa: p.taxaCartao, juros_mes: p.jurosMes, entrada: p.entrada, primeiro_venc: p.primeiroVenc, total_prazo: p.total };
+    const msg = `*Pedido Wolfs ${p.codigo}* · ${p.produtoNome} · ${p.nome}\nCódigo do pedido: WOLFS1:${btoa(unescape(encodeURIComponent(JSON.stringify(dados))))}`;
+    return msg;
+  }
+  function copiar(t, ok) { try { navigator.clipboard.writeText(t).then(() => toast(ok), () => toast('Não consegui copiar')); } catch { toast('Não consegui copiar'); } }
+  const pagamento = (p) => p.forma === 'Crediário próprio'
+    ? `Entrada ${brl(p.entrada)} + ${p.parcelas}x de ${brl(p.valorParcela)} (${String(p.jurosMes).replace('.', ',')}% a.m.) · todo dia ${p.diaVencimento}, 1ª em ${dataBR(p.primeiroVenc)} · total ${brl(p.total)}`
+    : p.forma === 'Pix' ? `Pix ${brl(p.total)}` : `${p.parcelas}x de ${brl(p.valorParcela)} no cartão · total ${brl(p.total)}`;
+  function desenharPedidos() {
+    const ps = D.pedidos;
+    $('n-ped').textContent = ps.filter((p) => p.status === 'novo').length;
+    $('k-novos').textContent = ps.filter((p) => p.status === 'novo').length;
+    $('k-analise').textContent = ps.filter((p) => p.status === 'em_analise').length;
+    const aprov = ps.filter((p) => p.status === 'aprovado' || p.status === 'concluido');
+    $('k-aprov').textContent = aprov.length; $('k-valor').textContent = brl(aprov.reduce((a, p) => a + p.total, 0));
+    const q = $('busca').value.trim().toLowerCase(), st = $('f-status').value, fm = $('f-forma').value;
+    const lista = ps.filter((p) => (!st || p.status === st) && (!fm || p.forma === fm) && (!q || [p.nome, p.cpf, p.telefone, p.produtoNome, p.codigo].join(' ').toLowerCase().includes(q)));
+    $('lista-ped').replaceChildren(...lista.map((p) => {
+      const box = el('article', 'ped');
+      const top = el('div', 'ped-top'); const a = el('div'); a.append(el('b', null, `${p.nome} · ${p.produtoNome}`), el('small', null, `${p.codigo} · ${dataHora(p.criadoEm)} · ${p.forma}`));
+      top.append(a, el('span', 'pill p-' + p.status, STATUS[p.status]));
+      const info = el('div', 'ped-info');
+      const campo = (k, v) => { if (!v) return; const d = el('div'); d.append(el('span', null, k), document.createTextNode(v)); info.append(d); };
+      campo('Pagamento', pagamento(p)); campo('Telefone', p.telefone); campo('CPF', p.cpf);
+      if (p.rua) campo('Endereço', `${p.rua}, ${p.numero}${p.complemento ? ' - ' + p.complemento : ''} - ${p.bairro}, ${p.cidade}/${p.uf} · CEP ${p.cep}`); else campo('Cidade', p.cidade);
+      if (p.emergNome) campo('Contato de emergência', `${p.emergNome} (${p.emergParentesco}) · ${p.emergTel}`);
+      const acts = el('div', 'ped-acts');
+      const sel = el('select'); sel.setAttribute('aria-label', 'Status do pedido'); Object.entries(STATUS).forEach(([k, v]) => sel.append(new Option(v, k))); sel.value = p.status;
+      sel.onchange = async () => { try { Object.assign(p, await api('admin/pedidos/' + p.id, { method: 'PUT', body: JSON.stringify({ status: sel.value }) })); toast('Status atualizado'); desenharPedidos(); } catch (e) { toast(e.message); sel.value = p.status; } };
+      const tel = digitos(p.telefone);
+      const wa = el('a', 'btn sm', 'WhatsApp do cliente'); wa.href = `https://wa.me/55${tel}?text=${encodeURIComponent(`Olá, ${p.nome.split(' ')[0]}! Aqui é da Wolfs, sobre o seu pedido ${p.codigo} (${p.produtoNome}).`)}`; wa.target = '_blank'; wa.rel = 'noopener'; wa.style.textDecoration = 'none';
+      const cp = el('button', 'btn sm', 'Copiar para o painel'); cp.type = 'button'; cp.onclick = () => copiar(codigoPainel(p), 'Copiado. Cole no painel em "Colar pedido do site".');
+      const obs = el('input'); obs.type = 'text'; obs.placeholder = 'Anotação interna'; obs.value = p.obsAdmin || ''; obs.style.flex = '1 1 200px'; obs.style.width = 'auto'; obs.setAttribute('aria-label', 'Anotação');
+      obs.onchange = async () => { try { Object.assign(p, await api('admin/pedidos/' + p.id, { method: 'PUT', body: JSON.stringify({ obsAdmin: obs.value }) })); toast('Anotação salva'); } catch (e) { toast(e.message); } };
+      acts.append(sel, wa, cp, obs);
+      box.append(top, info, acts); return box;
+    }));
+    $('vazio-ped').hidden = lista.length > 0;
+  }
+  ['busca', 'f-status', 'f-forma'].forEach((id) => $(id).addEventListener(id === 'busca' ? 'input' : 'change', desenharPedidos));
+
+  /* ---------- Produtos ---------- */
+  function desenharProdutos() {
+    $('n-prod').textContent = D.produtos.filter((p) => p.ativo).length;
+    $('lista-prod').replaceChildren(...D.produtos.map((p) => {
+      const r = el('div', 'prod-row' + (p.ativo ? '' : ' off'));
+      const t = el('div', 'thumb'); if (p.imagem) { const i = el('img'); i.src = p.imagem; i.alt = ''; t.append(i); } else t.textContent = p.categoria;
+      const tx = el('div'); tx.append(el('b', null, p.nome), el('small', null, `${p.categoria} · ${p.condicao} · ${brl(p.preco)}${p.ativo ? '' : ' · fora da loja'}`));
+      const b = el('button', 'btn sm', 'Editar'); b.type = 'button'; b.onclick = () => abrirProduto(p);
+      r.append(t, tx, b); return r;
+    }));
+  }
+  let editando = null, fotoChave = null, fotoNova = null;
+  function mostrarFoto() {
+    const t = $('p-thumb'); t.replaceChildren();
+    const src = fotoNova ? URL.createObjectURL(fotoNova) : fotoChave ? API + 'imagem/' + fotoChave : null;
+    if (src) { const i = el('img'); i.src = src; i.alt = ''; t.append(i); } else t.textContent = 'sem foto';
+    $('p-foto-rem').hidden = !src; $('p-foto-btn').textContent = src ? 'Trocar foto' : 'Escolher foto';
+  }
+  function abrirProduto(p) {
+    editando = p; fotoChave = p?.imagemChave || null; fotoNova = null;
+    $('prod-t').textContent = p ? 'Editar produto' : 'Novo produto';
+    $('p-cat').replaceChildren(...(D.config.categorias || []).map((c) => new Option(c, c)));
+    $('p-nome').value = p?.nome || ''; $('p-cat').value = p?.categoria || 'iPhone'; $('p-cond').value = p?.condicao || 'Novo';
+    $('p-preco').value = p?.preco || ''; $('p-ordem').value = p?.ordem ?? (D.produtos.length + 1); $('p-desc').value = p?.descricao || ''; $('p-ativo').checked = p ? p.ativo : true;
+    $('prod-err').hidden = true; mostrarFoto();
+    const box = $('p-apagar-box'); box.replaceChildren();
+    if (p) { const del = el('button', 'btn danger', 'Apagar'); del.type = 'button'; del.onclick = () => { box.replaceChildren(); const sim = el('button', 'btn danger', 'Sim, apagar'); sim.type = 'button'; sim.onclick = async () => { try { await api('admin/produtos/' + p.id, { method: 'DELETE' }); D.produtos = D.produtos.filter((x) => x !== p); desenharProdutos(); fechar(); toast('Produto apagado'); } catch (e) { toast(e.message); } }; const nao = el('button', 'btn', 'Não'); nao.type = 'button'; nao.onclick = () => abrirProduto(p); box.append(sim, nao); }; box.append(del); }
+    $('m-prod').hidden = false; $('p-nome').focus();
+  }
+  const fechar = () => { $('m-prod').hidden = true; };
+  $('novo-prod').addEventListener('click', () => abrirProduto(null));
+  $('prod-cancelar').addEventListener('click', fechar);
+  $('m-prod').addEventListener('click', (e) => { if (e.target === $('m-prod')) fechar(); });
+  $('p-foto-btn').addEventListener('click', () => $('p-foto').click());
+  $('p-foto').addEventListener('change', () => { const f = $('p-foto').files[0]; if (f) { if (f.size > 4 * 1024 * 1024) { $('prod-err').textContent = 'A foto deve ter até 4 MB.'; $('prod-err').hidden = false; } else { fotoNova = f; mostrarFoto(); } } $('p-foto').value = ''; });
+  $('p-foto-rem').addEventListener('click', () => { fotoNova = null; fotoChave = null; mostrarFoto(); });
+  $('prod-form').addEventListener('submit', async (e) => {
+    e.preventDefault(); const b = $('prod-salvar'); b.disabled = true; $('prod-err').hidden = true;
+    try {
+      if (fotoNova) {
+        const r = await fetch(API + 'admin/imagem', { method: 'POST', headers: { 'content-type': fotoNova.type, 'x-admin-token': TOKEN }, body: fotoNova });
+        const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.erro || 'Não foi possível enviar a foto.');
+        fotoChave = d.imagem;
+      }
+      const corpo = { nome: $('p-nome').value, categoria: $('p-cat').value, condicao: $('p-cond').value, preco: Number($('p-preco').value), ordem: Number($('p-ordem').value), descricao: $('p-desc').value, ativo: $('p-ativo').checked, imagem: fotoChave };
+      const salvo = editando ? await api('admin/produtos/' + editando.id, { method: 'PUT', body: JSON.stringify(corpo) }) : await api('admin/produtos', { method: 'POST', body: JSON.stringify(corpo) });
+      if (editando) Object.assign(editando, salvo); else D.produtos.push(salvo);
+      D.produtos.sort((a, b2) => a.ordem - b2.ordem || a.id - b2.id);
+      desenharProdutos(); fechar(); toast('Produto salvo');
+    } catch (err) { $('prod-err').textContent = err.message; $('prod-err').hidden = false; }
+    finally { b.disabled = false; }
+  });
+
+  /* ---------- Configurações ---------- */
+  function preencherConfig() {
+    const c = D.config;
+    $('c-nome').value = c.nomeSite || ''; $('c-whats').value = c.whatsapp || ''; $('c-cidade').value = c.cidade || ''; $('c-chamada').value = c.chamada || ''; $('c-rodape').value = c.rodape || '';
+    $('c-ent').value = c.entradaMin; $('c-max').value = c.credMax; $('c-juros').value = c.jurosMes; $('c-dias').value = (c.diasVencimento || []).join(', ');
+    $('c-livre').checked = !!c.valorLivre; $('c-aviso').value = c.avisoAprovacao || ''; $('c-aviso2').value = c.avisoPedido || ''; $('c-cmax').value = c.cartaoMax;
+    $('c-taxas').replaceChildren(...Array.from({ length: 12 }, (_, i) => i + 1).map((n) => { const l = el('label', 'f', `${n}x (%)`); l.htmlFor = 'tx-' + n; const inp = el('input'); inp.type = 'number'; inp.step = '0.01'; inp.min = '0'; inp.max = '40'; inp.id = 'tx-' + n; inp.value = c.taxasCartao[n] ?? c.taxasCartao[String(n)] ?? 0; l.append(inp); return l; }));
+  }
+  $('cfg-form').addEventListener('submit', async (e) => {
+    e.preventDefault(); $('cfg-err').hidden = true;
+    const juros = Number($('c-juros').value);
+    if (juros > 1) { $('cfg-err').textContent = 'Os juros do crediário podem ser de no máximo 1% ao mês. Acima disso é cobrança ilegal para quem não é financeira.'; $('cfg-err').hidden = false; $('c-juros').value = 1; return; }
+    const taxas = {}; for (let n = 1; n <= 12; n++) taxas[n] = Number($('tx-' + n).value) || 0;
+    const corpo = { nomeSite: $('c-nome').value, whatsapp: $('c-whats').value, cidade: $('c-cidade').value, chamada: $('c-chamada').value, rodape: $('c-rodape').value,
+      entradaMin: Number($('c-ent').value), credMax: Number($('c-max').value), jurosMes: juros, diasVencimento: $('c-dias').value.split(/[,;\s]+/).filter(Boolean).map(Number),
+      valorLivre: $('c-livre').checked, avisoAprovacao: $('c-aviso').value, avisoPedido: $('c-aviso2').value, cartaoMax: Number($('c-cmax').value), taxasCartao: taxas };
+    const b = $('cfg-salvar'); b.disabled = true;
+    try { D.config = (await api('admin/config', { method: 'PUT', body: JSON.stringify(corpo) })).config; preencherConfig(); toast('Configurações salvas. O site já mostra as mudanças.'); }
+    catch (err) { $('cfg-err').textContent = err.message; $('cfg-err').hidden = false; }
+    finally { b.disabled = false; }
+  });
+
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('m-prod').hidden) fechar(); });
+  if (TOKEN) carregar().catch(() => sair());
+})();
+</script>
+</body>
+</html>
