@@ -303,7 +303,9 @@
             <div class="sel" id="c2-sel"></div>
             <div class="big"><span>Crediário <span class="badge-ok" id="c2-badge">1% ao mês</span></span><b class="num" id="c2-v">—</b><small id="c2-s">—</small></div>
             <div class="sched" id="c2-sched"></div>
-            <form id="c2-form" novalidate>
+            <button type="button" class="cta" id="c2-quero">Comprar nesse plano</button>
+            <p class="fine" id="c2-quero-n" style="margin:-6px 0 0;text-align:center">Você preenche o cadastro no próximo passo.</p>
+            <form id="c2-form" novalidate hidden>
               <h3>Cadastro do crediário</h3>
               <p class="sect">Seus dados</p>
               <div class="fields">
@@ -370,7 +372,8 @@
         <p class="fine" id="cr-fine"></p>
         <button type="button" class="cta" id="cred-go">Fazer cadastro do crediário</button>
       </div>
-      <form id="form" novalidate>
+      <button type="button" class="cta" id="comprar">Comprar</button>
+      <form id="form" novalidate hidden>
         <h3>Quero este produto</h3>
         <div class="fields">
           <label class="f full" for="f-nome">Nome completo<input type="text" id="f-nome" autocomplete="name"></label>
@@ -499,7 +502,7 @@
     $('pm-cat').textContent = `${p.categoria} · ${p.condicao}`; $('pm-nome').textContent = p.nome;
     $('pm-desc').textContent = p.descricao || ''; $('pm-desc').hidden = !p.descricao;
     $('pm-preco').textContent = brl(p.preco); $('pm-sub').textContent = `no Pix · ou ${CFG.cartaoMax}x de ${brl(cartaoTotal(p.preco, CFG.cartaoMax) / CFG.cartaoMax)} no cartão`;
-    $('done').hidden = true; $('f-err').hidden = true;
+    $('done').hidden = true; $('form').hidden = true; $('f-err').hidden = true;
     drawSim(); $('pm').hidden = false; document.body.style.overflow = 'hidden'; $('pm-fechar').focus();
   }
   function fecharProduto() { $('pm').hidden = true; document.body.style.overflow = ''; }
@@ -512,7 +515,9 @@
     if (!prod) return;
     document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.f === forma)));
     $('p-pix').hidden = forma !== 'pix'; $('p-cartao').hidden = forma !== 'cartao'; $('p-cred').hidden = forma !== 'cred';
-    $('form').hidden = forma === 'cred' || !$('done').hidden; if (forma === 'cred') $('done').hidden = true;
+    if (forma === 'cred') { $('form').hidden = true; $('done').hidden = true; }
+    $('comprar').hidden = forma === 'cred' || !$('form').hidden || !$('done').hidden;
+    $('comprar').textContent = forma === 'pix' ? `Comprar no Pix por ${brl(prod.preco)}` : `Comprar em ${nCartao}x de ${brl(cartaoTotal(prod.preco, nCartao) / nCartao)}`;
     $('pix-v').textContent = brl(prod.preco);
     nCartao = Math.min(nCartao, CFG.cartaoMax);
     const tot = cartaoTotal(prod.preco, nCartao);
@@ -532,7 +537,7 @@
   $('cred-go').addEventListener('click', () => {
     c2.prodId = String(prod.id); c2.valor = prod.preco; c2.ent = entradaPct; c2.n = nCred;
     $('c2-prod').value = c2.prodId; $('c2-valor').value = prod.preco; $('c2-ent').value = entradaPct;
-    drawC2(); fecharProduto(); $('crediario').scrollIntoView({ behavior: 'smooth' });
+    drawC2(); fecharProduto(); abrirCadastro();
   });
 
   function mostrarFeito(box, r, credi) {
@@ -550,6 +555,7 @@
     }
     box.replaceChildren(...parts); box.hidden = false;
   }
+  $('comprar').addEventListener('click', () => { $('form').hidden = false; $('comprar').hidden = true; $('form').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); setTimeout(() => $('f-nome').focus({ preventScroll: true }), 250); });
   $('form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nome = $('f-nome').value.trim(), tel = $('f-tel').value.trim();
@@ -584,6 +590,11 @@
     $('c2-s').textContent = `Total a prazo ${brl(pl.total)} · à vista ${brl(c2.valor)} · parcelas todo dia ${c2.dia}`;
     $('c2-sched').replaceChildren(...[{ n: 'e', valor: pl.entrada }, ...pl.parcelas].map((p) => { const d = el('div'); d.append(el('span', null, p.n === 'e' ? 'Entrada · na compra' : `${p.n}ª parcela · ${dataBR(p.venc)}`), el('b', 'num', brl(p.valor))); return d; }));
   }
+  function abrirCadastro() {
+    $('c2-quero').hidden = true; $('c2-quero-n').hidden = true; $('c2-done').hidden = true; $('c2-form').hidden = false;
+    $('c2-form').scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(() => $('c2-nome').focus({ preventScroll: true }), 300);
+  }
+  $('c2-quero').addEventListener('click', () => { if (c2.valor >= 100) abrirCadastro(); else $('c2-valor').focus(); });
   $('c2-prod').addEventListener('change', () => { c2.prodId = $('c2-prod').value; const p = PRODUTOS.find((x) => String(x.id) === c2.prodId); if (p) { c2.valor = p.preco; $('c2-valor').value = p.preco; } else $('c2-valor').focus(); drawC2(); });
   $('c2-valor').addEventListener('input', () => { const v = Number($('c2-valor').value); c2.valor = v > 0 ? v : 0; const p = PRODUTOS.find((x) => String(x.id) === c2.prodId); if (p && p.preco !== c2.valor && CFG.valorLivre) { c2.prodId = ''; $('c2-prod').value = ''; } drawC2(); });
   $('c2-ent').addEventListener('input', () => { c2.ent = Number($('c2-ent').value); drawC2(); });
