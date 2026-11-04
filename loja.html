@@ -224,7 +224,7 @@
     </div>
     <div class="fields">
       <label class="f full" for="p-nome">Nome<input type="text" id="p-nome" placeholder="iPhone 13 128GB"></label>
-      <label class="f" for="p-cat">Categoria<select id="p-cat"></select></label>
+      <label class="f" for="p-cat">Categoria<input type="text" id="p-cat" list="lista-cats" placeholder="Celular, Casa, Perfumes…" autocomplete="off"><datalist id="lista-cats"></datalist></label>
       <label class="f" for="p-cond">Condição<select id="p-cond"><option>Novo</option><option>Seminovo</option><option>Usado</option></select></label>
       <label class="f" for="p-preco">Preço à vista (R$)<input type="number" id="p-preco" min="1" step="1"></label>
       <label class="f" for="p-ordem">Ordem na loja<input type="number" id="p-ordem" step="1"></label>
@@ -382,7 +382,7 @@
   function abrirProduto(p) {
     editando = p; fotoChave = p?.imagemChave || null; fotoNova = null;
     $('prod-t').textContent = p ? 'Editar produto' : 'Novo produto';
-    $('p-cat').replaceChildren(...(D.config.categorias || []).map((c) => new Option(c, c)));
+    $('lista-cats').replaceChildren(...[...new Set([...D.produtos.map((x) => x.categoria), ...(D.config.categorias || [])])].map((c) => { const o = document.createElement('option'); o.value = c; return o; }));
     $('p-nome').value = p?.nome || ''; $('p-cat').value = p?.categoria || 'iPhone'; $('p-cond').value = p?.condicao || 'Novo';
     $('p-preco').value = p?.preco || ''; $('p-ordem').value = p?.ordem ?? (D.produtos.length + 1); $('p-desc').value = p?.descricao || ''; $('p-ativo').checked = p ? p.ativo : true;
     $('prod-err').hidden = true; mostrarFoto();

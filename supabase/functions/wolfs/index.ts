@@ -34,7 +34,7 @@ function cpfValido(c: string) {
 
 /* ---------------- Configurações ---------------- */
 const COLECOES = ["estoque", "clientes", "vendas", "mercado", "config"];
-const CATEGORIAS = ["iPhone", "Celular", "Fone (AirPods)", "Relógio", "Caixa de som", "Outro"];
+const CATEGORIAS = ["iPhone", "Celular", "Fone de ouvido", "Relógio", "Caixa de som", "Informática", "Games", "Casa", "Beleza", "Perfumes", "Moda", "Acessórios", "Outro"];
 const CONFIG_PADRAO = {
   nomeSite: "Wolfs LTDA Investimentos",
   chamada: "iPhone, AirPods e eletrônicos em até 12x no cartão ou no crediário Wolfs.",
@@ -222,7 +222,7 @@ function limitarPedidos(ip: string) {
 function limparProduto(b: any, novo: boolean) {
   const out: Record<string, unknown> = {};
   if (novo || "nome" in b) { out.nome = texto(b.nome, 120); if (!out.nome) throw new HttpErro(400, "Coloque o nome do produto."); }
-  if (novo || "categoria" in b) out.categoria = CATEGORIAS.includes(b.categoria) ? b.categoria : "Outro";
+  if (novo || "categoria" in b) out.categoria = texto(b.categoria, 40) || "Outro";
   if (novo || "condicao" in b) out.condicao = ["Novo", "Seminovo", "Usado"].includes(b.condicao) ? b.condicao : "Novo";
   if (novo || "preco" in b) { out.preco_centavos = centavos(b.preco); if (!((out.preco_centavos as number) > 0)) throw new HttpErro(400, "Coloque o preço à vista."); }
   if ("descricao" in b) out.descricao = texto(b.descricao, 300) || null;
