@@ -248,9 +248,11 @@
   <div class="mhead"><h3 id="m-con-t">Novo empréstimo</h3><button class="btn sm" type="button" data-fechar>Fechar</button></div>
   <div class="fields">
     <label class="f full">Cliente<select id="co-cli"></select></label>
-    <label class="f">Valor emprestado (R$)<input type="number" id="co-valor" min="1" step="0.01"></label>
+    <label class="f full">Como lançar<select id="co-modo"><option value="manual">Só o valor a receber (eu digito quanto ela vai pagar)</option><option value="juros">Calcular pelo valor emprestado + juros</option></select></label>
+    <label class="f" id="lb-total">Total a receber (R$)<input type="number" id="co-total" min="1" step="0.01"></label>
+    <label class="f" id="lb-valor">Valor emprestado (R$)<input type="number" id="co-valor" min="0" step="0.01"></label>
     <label class="f">Data do empréstimo<input type="date" id="co-data"></label>
-    <label class="f">Juros (% ao mês, máx. 1)<input type="number" id="co-juros" min="0" max="1" step="0.05"></label>
+    <label class="f" id="lb-juros">Juros (% ao mês, máx. 1)<input type="number" id="co-juros" min="0" max="1" step="0.05"></label>
     <label class="f">Número de parcelas<input type="number" id="co-n" min="1" max="60" step="1"></label>
     <label class="f">Frequência<select id="co-per"><option value="mensal">Mensal</option><option value="quinzenal">Quinzenal</option><option value="semanal">Semanal</option></select></label>
     <label class="f">1º vencimento<input type="date" id="co-venc"></label>
@@ -258,7 +260,7 @@
   </div>
   <div class="resumo" id="co-resumo"></div>
   <div id="co-parc"></div>
-  <p class="fine">As parcelas são calculadas com juros de até 1% ao mês. Depois de salvar, você pode mudar a data de cada parcela e registrar pagamentos parciais ou adiantados.</p>
+  <p class="fine" id="co-nota"></p>
   <p class="err" id="co-err" hidden></p>
   <div class="row-end"><span id="co-del-box"></span><div class="acts"><button class="btn" type="button" id="co-regerar" hidden>Recalcular parcelas</button><button class="btn red" type="submit">Salvar empréstimo</button></div></div>
 </form></div>
@@ -532,11 +534,11 @@
     conEd = c || null; $('co-err').hidden = true; $('m-con-t').textContent = c ? `Empréstimo de ${nomeCli(c.cliente_id)}` : 'Novo empréstimo';
     $('co-cli').replaceChildren(...clientes.slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || '')).map((cl) => new Option(cl.nome, cl.id)));
     $('co-cli').value = c?.cliente_id || cliId || clientes[0]?.id || '';
-    $('co-valor').value = c?.valor || ''; $('co-data').value = c?.data || hoje(); $('co-juros').value = c?.juros_mes ?? cfg.juros; $('co-n').value = c?.parcelas?.length || 4;
+    $('co-modo').value = c?.modo || 'manual'; $('co-total').value = c ? totalContrato(c) : ''; $('co-valor').value = c ? (c.valor_emprestado ?? (c.modo === 'manual' ? '' : c.valor)) || '' : ''; $('co-data').value = c?.data || hoje(); $('co-juros').value = c?.juros_mes ?? cfg.juros; $('co-n').value = c?.parcelas?.length || 4;
     $('co-per').value = c?.periodo || 'mensal'; $('co-venc').value = c?.parcelas?.[0]?.venc || addMeses(hoje(), 1); $('co-obs').value = c?.obs || '';
     parcRasc = c ? JSON.parse(JSON.stringify(c.parcelas || [])) : [];
     const bloq = c && (c.parcelas || []).some((p) => pagoParc(p) > 0);
-    ['co-valor', 'co-juros', 'co-n', 'co-per', 'co-venc', 'co-data'].forEach((id) => { $(id).disabled = !!bloq; });
+    ['co-valor', 'co-juros', 'co-n', 'co-per', 'co-venc', 'co-data', 'co-total', 'co-modo'].forEach((id) => { $(id).disabled = !!bloq; });
     $('co-regerar').hidden = !c || bloq;
     const db = $('co-del-box'); db.replaceChildren();
     if (c) {
@@ -545,14 +547,28 @@
     }
     desenharCon(); abrir('m-con');
   }
-  function lerForm() { return { valor: Number($('co-valor').value) || 0, juros: Math.min(LIM.juros, Math.max(0, Number($('co-juros').value) || 0)), n: Math.round(Number($('co-n').value) || 0), per: $('co-per').value, venc: $('co-venc').value }; }
+  function lerForm() { return { modo: $('co-modo').value, total: Number($('co-total').value) || 0, valor: Number($('co-valor').value) || 0, juros: Math.min(LIM.juros, Math.max(0, Number($('co-juros').value) || 0)), n: Math.round(Number($('co-n').value) || 0), per: $('co-per').value, venc: $('co-venc').value }; }
+  function dividir(total, n, primeiro, per) { const P = PER[per] || PER.mensal; const base = Math.floor(total / n * 100) / 100; return Array.from({ length: n }, (_, k) => ({ n: k + 1, venc: P.passo(primeiro, k), valor: k === n - 1 ? r2(total - base * (n - 1)) : base, pago: 0, pagamentos: [] })); }
+  function taxaEquivalente(valor, parcelas, per) { // juros ao mês equivalentes às parcelas digitadas
+    const tot = parcelas.reduce((a, p) => a + p.valor, 0); if (!(valor > 0) || tot <= valor) return 0;
+    const n = parcelas.length, pmt = tot / n; let lo = 0, hi = 5;
+    for (let k = 0; k < 60; k++) { const mid = (lo + hi) / 2; const pv = pmt * (1 - Math.pow(1 + mid, -n)) / mid; if (pv > valor) lo = mid; else hi = mid; }
+    const fator = (PER[per] || PER.mensal).fator; return (Math.pow(1 + lo, 1 / fator) - 1) * 100;
+  }
+  function modoUI() {
+    const man = $('co-modo').value === 'manual';
+    $('lb-total').hidden = !man; $('lb-juros').hidden = man;
+    $('lb-valor').firstChild.textContent = man ? 'Valor emprestado (opcional, para calcular o lucro)' : 'Valor emprestado (R$)';
+    $('co-nota').textContent = man ? 'O total é dividido igualmente entre as parcelas. Você pode mudar o valor e a data de cada parcela antes de salvar.' : 'As parcelas são calculadas com juros de até 1% ao mês. Depois de salvar, você pode mudar a data de cada parcela.';
+  }
   function desenharCon() {
-    const f = lerForm();
-    if (!conEd || !parcRasc.length) parcRasc = f.valor > 0 && f.n >= 1 && f.n <= 60 && f.venc ? gerarParcelas(f.valor, f.juros, f.n, f.venc, f.per) : [];
+    const f = lerForm(); modoUI();
+    if (!conEd || !parcRasc.length) parcRasc = f.n >= 1 && f.n <= 60 && f.venc ? (f.modo === 'manual' ? (f.total > 0 ? dividir(f.total, f.n, f.venc, f.per) : []) : (f.valor > 0 ? gerarParcelas(f.valor, f.juros, f.n, f.venc, f.per) : [])) : [];
     const total = r2(parcRasc.reduce((a, p) => a + (Number(p.valor) || 0), 0)), pago = r2(parcRasc.reduce((a, p) => a + pagoParc(p), 0));
     const res = $('co-resumo'); res.replaceChildren();
     const add = (l, v) => { const d = el('div'); d.append(el('small', null, l), el('b', null, v)); res.append(d); };
-    add('Emprestado', brl(f.valor)); add('Parcela', parcRasc[0] ? brl(parcRasc[0].valor) : '—'); add('Total a receber', brl(total)); add('Lucro (juros)', brl(Math.max(0, total - f.valor)));
+    if (f.valor > 0) add('Emprestado', brl(f.valor)); add('Parcela', parcRasc[0] ? brl(parcRasc[0].valor) : '—'); add('Total a receber', brl(total)); if (f.valor > 0) add('Lucro', brl(Math.max(0, total - f.valor)));
+    if (f.modo === 'manual' && f.valor > 0 && parcRasc.length) { const tx = taxaEquivalente(f.valor, parcRasc, f.per); add('Juros equivalente', tx.toFixed(2).replace('.', ',') + '% a.m.'); }
     if (conEd) { add('Já pago', brl(pago)); add('Falta', brl(Math.max(0, total - pago))); }
     const box = $('co-parc'); box.replaceChildren();
     if (!parcRasc.length) return;
@@ -563,24 +579,27 @@
       const tr = el('tr'); const falta = faltaParc(p), h = hoje();
       const dv = el('input'); dv.type = 'date'; dv.value = p.venc; dv.style.width = '150px'; dv.onchange = () => { p.venc = dv.value; };
       const tdD = el('td'); tdD.append(dv);
+      const tdV = el('td', 'r'); if (pagoParc(p) > 0) tdV.textContent = brl(p.valor); else { const iv = el('input'); iv.type = 'number'; iv.step = '0.01'; iv.min = '0'; iv.value = p.valor; iv.style.width = '120px'; iv.style.textAlign = 'right'; iv.onchange = () => { p.valor = r2(iv.value); const t2 = parcRasc.reduce((a, x) => a + (Number(x.valor) || 0), 0); if (lerForm().modo === 'manual') $('co-total').value = r2(t2); desenharCon(); }; tdV.append(iv); }
       const st = el('td'); st.append(falta <= 0 ? el('span', 'pill p-info', 'Paga') : p.venc < h ? el('span', 'pill p-bad', 'Atrasada') : p.venc === h ? el('span', 'pill p-warn', 'Hoje') : el('span', 'pill p-ok', 'Em aberto'));
       const ac = el('td'); if (conEd) { const b = el('button', 'btn sm ' + (falta > 0 ? 'ok' : ''), falta > 0 ? 'Recebi' : 'Ver'); b.type = 'button'; b.onclick = () => abrirPag(conEd, i); ac.append(b); }
-      tr.append(el('td', 'num', String(p.n)), tdD, el('td', 'r', brl(p.valor)), el('td', 'r', brl(pagoParc(p))), st, ac); body.append(tr);
+      tr.append(el('td', 'num', String(p.n)), tdD, tdV, el('td', 'r', brl(pagoParc(p))), st, ac); body.append(tr);
     });
     t.append(body); tb.append(t); box.append(tb);
   }
-  ['co-valor', 'co-juros', 'co-n', 'co-per', 'co-venc'].forEach((id) => $(id).addEventListener('input', () => { if (!conEd) desenharCon(); }));
-  $('co-regerar').addEventListener('click', () => { const f = lerForm(); parcRasc = gerarParcelas(f.valor, f.juros, f.n, f.venc, f.per); desenharCon(); toast('Parcelas recalculadas. Salve para confirmar.'); });
+  ['co-valor', 'co-juros', 'co-n', 'co-per', 'co-venc', 'co-total', 'co-modo'].forEach((id) => $(id).addEventListener('input', () => { if (!conEd) { if (id !== 'co-valor' || lerForm().modo === 'juros') parcRasc = []; desenharCon(); } }));
+  $('co-regerar').addEventListener('click', () => { const f = lerForm(); parcRasc = f.modo === 'manual' ? dividir(f.total, f.n, f.venc, f.per) : gerarParcelas(f.valor, f.juros, f.n, f.venc, f.per); desenharCon(); toast('Parcelas recalculadas. Salve para confirmar.'); });
   $('f-con').addEventListener('submit', async (e) => {
     e.preventDefault(); const f = lerForm(); const err = (m) => { $('co-err').textContent = m; $('co-err').hidden = false; };
     if (!$('co-cli').value) return err('Escolha o cliente.');
-    if (!(f.valor > 0)) return err('Coloque o valor emprestado.');
+    if (f.modo === 'juros' && !(f.valor > 0)) return err('Coloque o valor emprestado.');
+    if (f.modo === 'manual' && !(f.total > 0) && !parcRasc.length) return err('Coloque o total a receber.');
     if (!(f.n >= 1 && f.n <= 60)) return err('Parcelas: de 1 a 60.');
     if (!f.venc) return err('Escolha o 1º vencimento.');
-    if (Number($('co-juros').value) > LIM.juros) return err('O juro máximo permitido é de 1% ao mês.');
+    if (f.modo === 'juros' && Number($('co-juros').value) > LIM.juros) return err('O juro máximo permitido é de 1% ao mês.');
     if (!parcRasc.length) desenharCon();
     parcRasc.sort((a, b) => a.venc.localeCompare(b.venc)).forEach((p, i) => { p.n = i + 1; });
-    const d = { cliente_id: $('co-cli').value, valor: r2(f.valor), data: $('co-data').value || hoje(), juros_mes: f.juros, periodo: f.per, parcelas: parcRasc, obs: $('co-obs').value.trim(), status: conEd?.status === 'cancelado' ? 'cancelado' : 'ativo', atualizado: new Date().toISOString() };
+    const totParc = r2(parcRasc.reduce((a, p) => a + (Number(p.valor) || 0), 0));
+    const d = { cliente_id: $('co-cli').value, modo: f.modo, valor_emprestado: f.valor > 0 ? r2(f.valor) : null, valor: r2(f.valor > 0 ? f.valor : totParc), juros_mes: f.modo === 'juros' ? f.juros : null, data: $('co-data').value || hoje(), periodo: f.per, parcelas: parcRasc, obs: $('co-obs').value.trim(), status: conEd?.status === 'cancelado' ? 'cancelado' : 'ativo', atualizado: new Date().toISOString() };
     try { if (conEd) await cols.con.doc(conEd.id).set({ ...conEd, ...d, id: undefined }); else await cols.con.add({ ...d, criado: d.atualizado }); fechar('m-con'); toast('Empréstimo salvo'); if (aba !== 'contratos' && !conEd) irPara('contratos'); }
     catch (x) { err(x.message || 'Não foi possível salvar.'); }
   });
