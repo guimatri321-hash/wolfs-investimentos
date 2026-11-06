@@ -126,6 +126,16 @@
   .row-end { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
   .err { color: var(--bad); font-size: .85rem; margin: 0; }
   .fine { color: var(--faint); font-size: .76rem; margin: 0; }
+  .fotos-add { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .fotos-add select { width: auto; flex: 0 1 240px; }
+  .fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .foto { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: rgba(0,0,0,.4); }
+  .foto a { display: block; aspect-ratio: 1; }
+  .foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .foto span { display: block; font-size: .72rem; padding: 6px 8px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .foto button { position: absolute; top: 6px; right: 6px; border: 0; border-radius: 8px; background: rgba(0,0,0,.75); color: #fff; font-size: .72rem; font-weight: 700; padding: 4px 8px; }
+  .thumbs { display: flex; gap: 4px; }
+  .thumbs img { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; }
   .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 60; background: #f3f3f4; color: #0b0b0d; padding: 11px 18px; border-radius: 12px; font-weight: 700; font-size: .88rem; }
   .banner { background: rgba(245,184,74,.12); border: 1px solid rgba(245,184,74,.4); color: var(--warn); padding: 10px 14px; border-radius: 12px; margin-bottom: 14px; font-size: .88rem; }
 </style>
@@ -146,6 +156,7 @@
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="geral">Visão geral</button>
       <button class="tab" role="tab" data-tab="cobrancas">Cobranças <span class="count" id="n-cob">0</span></button>
+      <button class="tab" role="tab" data-tab="receber">A receber <span class="count" id="n-rec">0</span></button>
       <button class="tab" role="tab" data-tab="contratos">Empréstimos <span class="count" id="n-con">0</span></button>
       <button class="tab" role="tab" data-tab="clientes">Clientes <span class="count" id="n-cli">0</span></button>
       <button class="tab" role="tab" data-tab="config">Configurações</button>
@@ -187,6 +198,35 @@
     <div class="lista" id="l-cob"></div>
   </section>
 
+  <!-- A RECEBER (manual) -->
+  <section class="view" id="v-receber" hidden>
+    <div class="view-head"><div><div class="eyebrow">A receber</div><h2>Seus valores a receber</h2><p>Lance aqui qualquer valor que alguém te deve: quem, quanto e quando. O painel soma tudo, mostra o que está vencido e o que entra no mês.</p></div></div>
+    <div class="kpis">
+      <div class="kpi hot"><div class="l">Total a receber</div><div class="v num" id="r-total">R$ 0</div><div class="s" id="r-total-s">0 lançamento(s)</div></div>
+      <div class="kpi"><div class="l">Vencido</div><div class="v num bad" id="r-venc">R$ 0</div><div class="s" id="r-venc-s">0 lançamento(s)</div></div>
+      <div class="kpi"><div class="l">Entra este mês</div><div class="v num" id="r-mes">R$ 0</div><div class="s" id="r-mes-s">Até o fim do mês</div></div>
+      <div class="kpi"><div class="l">Próximo mês</div><div class="v num" id="r-prox">R$ 0</div><div class="s" id="r-prox-s">—</div></div>
+      <div class="kpi"><div class="l">Já recebido</div><div class="v num ok" id="r-recebido">R$ 0</div><div class="s" id="r-recebido-s">0 lançamento(s)</div></div>
+    </div>
+    <div class="card">
+      <h3>Novo lançamento</h3><p class="sub">Se for parcelado, coloque o número de parcelas: o painel cria uma por mês a partir da data.</p>
+      <form class="fields" id="f-rec" novalidate>
+        <label class="f">Quem deve<input type="text" id="rc-quem" list="rc-nomes" placeholder="Nome da pessoa" autocomplete="off"><datalist id="rc-nomes"></datalist></label>
+        <label class="f">Valor de cada parcela (R$)<input type="number" id="rc-valor" min="0.01" step="0.01"></label>
+        <label class="f">Vencimento (1ª)<input type="date" id="rc-venc"></label>
+        <label class="f">Parcelas<input type="number" id="rc-n" min="1" max="60" step="1" value="1"></label>
+        <label class="f full">Observação<input type="text" id="rc-obs" placeholder="Ex.: resto do empréstimo de outubro"></label>
+        <div class="full row-end"><p class="err" id="rc-err" hidden></p><span class="fine" id="rc-prev"></span><button class="btn red" type="submit">Adicionar</button></div>
+      </form>
+    </div>
+    <div class="filters">
+      <input type="search" id="rc-busca" placeholder="Buscar nome ou observação">
+      <select id="rc-filtro"><option value="abertos">Em aberto</option><option value="vencidos">Vencidos</option><option value="mes">Este mês</option><option value="recebidos">Recebidos</option><option value="">Todos</option></select>
+    </div>
+    <div class="card tbox"><table><thead><tr><th>Vencimento</th><th>Quem</th><th>Observação</th><th class="r">Valor</th><th>Situação</th><th></th></tr></thead><tbody id="t-rec"></tbody></table><div class="vazio" id="rec-vazio" hidden><b>Nada lançado aqui</b>Use o formulário acima para lançar o que você tem a receber.</div></div>
+    <div class="card"><h3>Total por pessoa</h3><p class="sub">Quanto cada um ainda te deve nos lançamentos manuais.</p><div class="rank" id="rc-pessoas"></div></div>
+  </section>
+
   <!-- CONTRATOS -->
   <section class="view" id="v-contratos" hidden>
     <div class="view-head"><div><div class="eyebrow">Empréstimos</div><h2>Todos os contratos</h2><p>Clique num empréstimo para ver as parcelas, registrar pagamento, mudar datas ou valores.</p></div><button class="btn red" type="button" data-novo="contrato">+ Novo empréstimo</button></div>
@@ -201,7 +241,7 @@
   <section class="view" id="v-clientes" hidden>
     <div class="view-head"><div><div class="eyebrow">Clientes</div><h2>Quem pegou dinheiro</h2><p>Dados, contato de emergência e histórico de cada cliente.</p></div><button class="btn red" type="button" data-novo="cliente">+ Cliente</button></div>
     <div class="filters"><input type="search" id="cl-busca" placeholder="Buscar nome, CPF ou telefone"></div>
-    <div class="card tbox"><table><thead><tr><th>Nome</th><th>Telefone</th><th>CPF</th><th class="r">Empréstimos</th><th class="r">Em aberto</th><th class="r">Atrasado</th><th>Situação</th></tr></thead><tbody id="t-cli"></tbody></table><div class="vazio" id="cli-vazio" hidden><b>Nenhum cliente ainda</b>Cadastre o primeiro em "+ Cliente".</div></div>
+    <div class="card tbox"><table><thead><tr><th>Nome</th><th>Fotos</th><th>Telefone</th><th>CPF</th><th class="r">Empréstimos</th><th class="r">Em aberto</th><th class="r">Atrasado</th><th>Situação</th></tr></thead><tbody id="t-cli"></tbody></table><div class="vazio" id="cli-vazio" hidden><b>Nenhum cliente ainda</b>Cadastre o primeiro em "+ Cliente".</div></div>
   </section>
 
   <!-- CONFIG -->
@@ -237,6 +277,14 @@
     <label class="f">Parentesco<input type="text" id="cl-ep" placeholder="Mãe, irmão…"></label>
     <label class="f">Telefone<input type="tel" id="cl-et"></label>
     <label class="f full">Observações<textarea id="cl-obs" rows="2" placeholder="Indicação, onde trabalha, garantia…"></textarea></label>
+    <div class="sect full">Fotos</div>
+    <div class="full fotos-add">
+      <select id="cl-foto-tipo"><option>Residência</option><option>Documento (RG/CNH)</option><option>Comprovante de endereço</option><option>Selfie com documento</option><option>Garantia</option><option>Outra</option></select>
+      <label class="btn" for="cl-foto-in">+ Adicionar fotos</label>
+      <input type="file" id="cl-foto-in" accept="image/*" multiple hidden>
+      <span class="fine" id="cl-foto-st"></span>
+    </div>
+    <div class="full fotos" id="cl-fotos"></div>
   </div>
   <div id="cl-hist"></div>
   <p class="err" id="cl-err" hidden></p>
@@ -300,7 +348,8 @@
   let cfg = { juros: 1, multa: 2, mora: 1, meta: 10000, meta_fim: '', antes: 2,
     msg: 'Olá, {nome}! Passando para lembrar da parcela {parcela} do seu empréstimo, no valor de {valor}, com vencimento em {vencimento}. Qualquer dúvida estou à disposição.',
     msg_antes: 'Olá, {nome}! Tudo bem? Só lembrando que a parcela {parcela}, de {valor}, vence em {vencimento}.' };
-  let clientes = [], contratos = [], cols = null, aba = 'geral';
+  let clientes = [], contratos = [], receber = [], cols = null, aba = 'geral', assets = null;
+  const fotoUrl = (id) => /^https:\/\//.test(id) ? id : (window.wolfsImagemUrl ? window.wolfsImagemUrl(id) : '');
 
   /* ---------- Contas ---------- */
   const PER = { mensal: { passo: (iso, k) => addMeses(iso, k), fator: 1 }, quinzenal: { passo: (iso, k) => addDias(iso, 15 * k), fator: 0.5 }, semanal: { passo: (iso, k) => addDias(iso, 7 * k), fator: 7 / 30 } };
@@ -332,7 +381,7 @@
   const nomeCli = (id) => cliPor(id)?.nome || 'Cliente removido';
 
   /* ---------- Abas ---------- */
-  const ABAS = ['geral', 'cobrancas', 'contratos', 'clientes', 'config'];
+  const ABAS = ['geral', 'cobrancas', 'receber', 'contratos', 'clientes', 'config'];
   function irPara(t) {
     aba = t;
     document.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
@@ -355,23 +404,28 @@
     if (aba === 'geral') renderGeral(abertas, atrasadas);
     if (aba === 'cobrancas') renderCob();
     if (aba === 'contratos') renderCon();
+    if (aba === 'receber') renderRec();
+    $('n-rec').textContent = receber.filter((r) => !r.recebido).length;
+    $('n-rec').classList.toggle('bad', receber.some((r) => !r.recebido && r.venc < h));
     if (aba === 'clientes') renderCli();
     if (aba === 'config') renderCfg();
   }
 
   function renderGeral(abertas, atrasadas) {
     const at = ativos();
-    const receber = r2(abertas.reduce((a, x) => a + faltaParc(x.p), 0));
-    const recebido = r2(at.reduce((a, c) => a + recebidoContrato(c), 0));
+    const manAberto = receber.filter((r) => !r.recebido), manTotal = r2(manAberto.reduce((a, r) => a + (Number(r.valor) || 0), 0));
+    const manAtraso = manAberto.filter((r) => r.venc < hoje()); const manAtrasoV = r2(manAtraso.reduce((a, r) => a + (Number(r.valor) || 0), 0));
+    const aReceber = r2(abertas.reduce((a, x) => a + faltaParc(x.p), 0) + manTotal);
+    const recebido = r2(at.reduce((a, c) => a + recebidoContrato(c), 0) + receber.filter((r) => r.recebido).reduce((a, r) => a + (Number(r.valor) || 0), 0));
     const rua = r2(at.reduce((a, c) => a + Math.max(0, (Number(c.valor) || 0) - pagoContrato(c)), 0));
     const lucroReal = r2(at.reduce((a, c) => a + Math.max(0, recebidoContrato(c) - (Number(c.valor) || 0)), 0));
     const lucroPrev = r2(at.reduce((a, c) => a + Math.max(0, totalContrato(c) - (Number(c.valor) || 0)), 0));
-    const atraso = r2(atrasadas.reduce((a, x) => a + faltaParc(x.p), 0));
-    $('k-receber').textContent = brl0(receber); $('k-receber-s').textContent = `${abertas.length} parcela(s) em aberto`;
+    const atraso = r2(atrasadas.reduce((a, x) => a + faltaParc(x.p), 0) + manAtrasoV);
+    $('k-receber').textContent = brl0(aReceber); $('k-receber-s').textContent = `${abertas.length} parcela(s) de empréstimos + ${manAberto.length} lançamento(s) manuais`;
     $('k-rua').textContent = brl0(rua);
     $('k-recebido').textContent = brl0(recebido);
     $('k-lucro').textContent = brl0(lucroReal); $('k-lucro-s').textContent = `Previsto no total: ${brl0(lucroPrev)}`;
-    $('k-atraso').textContent = brl0(atraso); $('k-atraso-s').textContent = `${atrasadas.length} parcela(s) · ${receber ? Math.round(atraso / receber * 100) : 0}% do a receber`;
+    $('k-atraso').textContent = brl0(atraso); $('k-atraso-s').textContent = `${atrasadas.length + manAtraso.length} item(ns) · ${aReceber ? Math.round(atraso / aReceber * 100) : 0}% do a receber`;
     // meta
     const meta = Number(cfg.meta) || 0; const pct = meta ? Math.min(100, lucroReal / meta * 100) : 0;
     $('meta-bar').style.width = pct + '%'; $('meta-v').textContent = `${brl0(lucroReal)} de ${brl0(meta)}`; $('meta-p').textContent = Math.round(pct) + '%';
@@ -479,7 +533,8 @@
       const atr = r2(cs.reduce((a, c) => a + atrasoContrato(c).reduce((s, p) => s + faltaParc(p), 0), 0));
       const tr = el('tr', 'click'); tr.onclick = () => abrirCli(cl);
       const st = el('td'); st.append(atr > 0 ? el('span', 'pill p-bad', 'Em atraso') : aberto > 0 ? el('span', 'pill p-ok', 'Em dia') : el('span', 'pill p-mut', 'Sem dívida'));
-      tr.append(el('td', null, cl.nome || '—'), el('td', 'num', cl.telefone || '—'), el('td', 'num', cl.cpf || '—'), el('td', 'r', String(cs.length)), el('td', 'r', brl(aberto)), el('td', 'r', brl(atr)), st);
+      const th = el('td'); const tb = el('div', 'thumbs'); (cl.fotos || []).slice(0, 3).forEach((f) => { const im = el('img'); im.src = fotoUrl(f.id); im.alt = f.tipo || ''; im.loading = 'lazy'; tb.append(im); }); if ((cl.fotos || []).length > 3) tb.append(el('span', 'fine', '+' + (cl.fotos.length - 3))); th.append(tb);
+      tr.append(el('td', null, cl.nome || '—'), th, el('td', 'num', cl.telefone || '—'), el('td', 'num', cl.cpf || '—'), el('td', 'r', String(cs.length)), el('td', 'r', brl(aberto)), el('td', 'r', brl(atr)), st);
       return tr;
     }));
   }
@@ -494,6 +549,56 @@
   });
   ['c-busca', 'c-filtro', 'e-busca', 'e-filtro', 'cl-busca'].forEach((id) => $(id).addEventListener(id.includes('busca') ? 'input' : 'change', render));
 
+  /* ---------- A receber (lançamentos manuais) ---------- */
+  const salvarRec = async (lista) => { receber = lista; render(); await cols.cfg.doc('receber').set({ itens: lista, atualizado: new Date().toISOString() }); };
+  function renderRec() {
+    const h = hoje(), mes = h.slice(0, 7), [yy, mm] = h.split('-').map(Number), prox = new Date(Date.UTC(yy, mm, 1)).toISOString().slice(0, 7);
+    const ab = receber.filter((r) => !r.recebido), soma = (l) => r2(l.reduce((a, r) => a + (Number(r.valor) || 0), 0));
+    const venc = ab.filter((r) => r.venc < h), noMes = ab.filter((r) => r.venc >= h && r.venc.slice(0, 7) === mes), noProx = ab.filter((r) => r.venc.slice(0, 7) === prox), rec = receber.filter((r) => r.recebido);
+    $('r-total').textContent = brl(soma(ab)); $('r-total-s').textContent = `${ab.length} lançamento(s) em aberto`;
+    $('r-venc').textContent = brl(soma(venc)); $('r-venc-s').textContent = `${venc.length} lançamento(s)`;
+    $('r-mes').textContent = brl(soma(noMes)); $('r-mes-s').textContent = `${noMes.length} até o fim de ${MES[mm - 1]}`;
+    $('r-prox').textContent = brl(soma(noProx)); $('r-prox-s').textContent = `${noProx.length} em ${MES[Number(prox.slice(5)) - 1]}`;
+    $('r-recebido').textContent = brl(soma(rec)); $('r-recebido-s').textContent = `${rec.length} lançamento(s)`;
+    $('rc-nomes').replaceChildren(...[...new Set([...clientes.map((c) => c.nome), ...receber.map((r) => r.quem)].filter(Boolean))].map((n) => { const o = el('option'); o.value = n; return o; }));
+    const q = $('rc-busca').value.trim().toLowerCase(), f = $('rc-filtro').value;
+    const lista = receber.filter((r) => {
+      if (q && !((r.quem || '') + ' ' + (r.obs || '')).toLowerCase().includes(q)) return false;
+      if (f === 'abertos') return !r.recebido; if (f === 'recebidos') return r.recebido;
+      if (f === 'vencidos') return !r.recebido && r.venc < h; if (f === 'mes') return !r.recebido && r.venc.slice(0, 7) === mes; return true;
+    }).sort((a, b) => f === 'recebidos' ? (b.recebido_em || '').localeCompare(a.recebido_em || '') : a.venc.localeCompare(b.venc));
+    $('rec-vazio').hidden = lista.length > 0;
+    $('t-rec').replaceChildren(...lista.map((r) => {
+      const tr = el('tr'); const st = el('td');
+      st.append(r.recebido ? el('span', 'pill p-info', 'Recebido ' + dBR(r.recebido_em).slice(0, 5)) : r.venc < h ? el('span', 'pill p-bad', `Vencido há ${dias(r.venc, h)}d`) : r.venc === h ? el('span', 'pill p-warn', 'Vence hoje') : el('span', 'pill p-ok', `Em ${dias(h, r.venc)}d`));
+      const ac = el('td'); ac.style.whiteSpace = 'nowrap';
+      const bt = el('button', 'btn sm ' + (r.recebido ? '' : 'ok'), r.recebido ? 'Desfazer' : 'Recebi'); bt.type = 'button';
+      bt.onclick = () => salvarRec(receber.map((x) => x.id === r.id ? { ...x, recebido: !x.recebido, recebido_em: x.recebido ? '' : hoje() } : x)).then(() => toast(r.recebido ? 'Voltou para em aberto' : 'Marcado como recebido')).catch((e) => toast(e.message));
+      const ed = el('button', 'btn sm', 'Editar'); ed.type = 'button'; ed.style.marginLeft = '6px';
+      ed.onclick = () => { const v = prompt('Novo valor (R$):', String(r.valor).replace('.', ',')); if (v == null) return; const d = prompt('Vencimento (dd/mm/aaaa):', dBR(r.venc)); if (d == null) return; const [dd, m2, a2] = d.split('/'); const iso = a2 && m2 && dd ? `${a2.padStart(4, '20')}-${m2.padStart(2, '0')}-${dd.padStart(2, '0')}` : r.venc; const nv = r2(String(v).replace(/\./g, '').replace(',', '.')); salvarRec(receber.map((x) => x.id === r.id ? { ...x, valor: nv > 0 ? nv : x.valor, venc: /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso : x.venc } : x)).then(() => toast('Lançamento atualizado')); };
+      const ex = el('button', 'btn sm ghost-bad', 'Excluir'); ex.type = 'button'; ex.style.marginLeft = '6px'; confirmar(ex, 'Excluir', () => salvarRec(receber.filter((x) => x.id !== r.id)).then(() => toast('Lançamento excluído')));
+      ac.append(bt, ed, ex);
+      tr.append(el('td', 'num', dBR(r.venc)), el('td', null, r.quem || '—'), el('td', null, r.obs || ''), el('td', 'r', brl(r.valor)), st, ac);
+      return tr;
+    }));
+    const porP = {}; ab.forEach((r) => { porP[r.quem || '—'] = (porP[r.quem || '—'] || 0) + (Number(r.valor) || 0); });
+    const ord = Object.entries(porP).sort((a, b) => b[1] - a[1]);
+    $('rc-pessoas').replaceChildren(...(ord.length ? ord.map(([n, v]) => { const d = el('div'); d.append(el('span', null, n), el('b', 'num', brl(v))); return d; }) : [el('p', 'fine', 'Ninguém devendo nos lançamentos manuais.')]));
+  }
+  function prevRec() { const v = Number($('rc-valor').value) || 0, n = Math.max(1, Math.round(Number($('rc-n').value) || 1)); $('rc-prev').textContent = v > 0 && n > 1 ? `${n} parcelas de ${brl(v)} = ${brl(v * n)}` : ''; }
+  ['rc-valor', 'rc-n'].forEach((id) => $(id).addEventListener('input', prevRec));
+  ['rc-busca', 'rc-filtro'].forEach((id) => $(id).addEventListener(id === 'rc-busca' ? 'input' : 'change', renderRec));
+  $('rc-venc').value = hoje();
+  $('f-rec').addEventListener('submit', async (e) => {
+    e.preventDefault(); const err = (m) => { $('rc-err').textContent = m; $('rc-err').hidden = false; }; $('rc-err').hidden = true;
+    const quem = $('rc-quem').value.trim(), v = r2($('rc-valor').value), venc = $('rc-venc').value, n = Math.round(Number($('rc-n').value) || 1);
+    if (!quem) return err('Coloque quem deve.'); if (!(v > 0)) return err('Coloque o valor.'); if (!venc) return err('Escolha o vencimento.'); if (n < 1 || n > 60) return err('Parcelas: de 1 a 60.');
+    const base = Date.now().toString(36); const obs = $('rc-obs').value.trim();
+    const novos = Array.from({ length: n }, (_, k) => ({ id: base + k, quem, valor: v, venc: addMeses(venc, k), obs: n > 1 ? `${obs ? obs + ' · ' : ''}parcela ${k + 1}/${n}` : obs, recebido: false, recebido_em: '', criado: new Date().toISOString() }));
+    try { await salvarRec([...receber, ...novos]); toast(n > 1 ? `${n} parcelas lançadas` : 'Lançamento adicionado'); $('rc-valor').value = ''; $('rc-obs').value = ''; $('rc-n').value = 1; prevRec(); $('rc-quem').focus(); }
+    catch (x) { err(x.message || 'Não foi possível salvar.'); }
+  });
+
   /* ---------- Modais ---------- */
   const abrir = (id) => { $(id).hidden = false; document.body.style.overflow = 'hidden'; };
   const fechar = (id) => { $(id).hidden = true; document.body.style.overflow = ''; };
@@ -502,9 +607,29 @@
   const confirmar = (btn, txt, fn) => { btn.onclick = async () => { if (btn.dataset.ok !== '1') { btn.dataset.ok = '1'; btn.textContent = 'Clique de novo para confirmar'; setTimeout(() => { btn.dataset.ok = ''; btn.textContent = txt; }, 4000); return; } await fn(); }; };
 
   // Cliente
-  let cliEd = null;
+  let cliEd = null, cliFotos = [];
+  function desenharFotos() {
+    $('cl-fotos').replaceChildren(...cliFotos.map((f, i) => { const d = el('div', 'foto'); const a = el('a'); a.href = fotoUrl(f.id); a.target = '_blank'; a.rel = 'noopener'; const im = el('img'); im.src = fotoUrl(f.id); im.alt = f.tipo; a.append(im); const x = el('button', null, 'Remover'); x.type = 'button'; x.onclick = () => { cliFotos.splice(i, 1); desenharFotos(); }; d.append(a, el('span', null, f.tipo), x); return d; }));
+  }
+  async function reduzir(file) { // diminui a foto para caber no servidor e carregar rápido
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(file); });
+    const max = 1600, k = Math.min(1, max / Math.max(img.width, img.height)); const cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(img.src);
+    return await new Promise((ok) => cv.toBlob(ok, 'image/jpeg', 0.82));
+  }
+  $('cl-foto-in').addEventListener('change', async (e) => {
+    const files = [...e.target.files]; e.target.value = ''; if (!files.length) return;
+    if (!assets) assets = await window.claude.use('assets');
+    const tipo = $('cl-foto-tipo').value; let ok = 0;
+    for (const [i, f] of files.entries()) {
+      $('cl-foto-st').textContent = `Enviando ${i + 1} de ${files.length}…`;
+      try { const blob = await reduzir(f); const r = await assets.upload(blob); cliFotos.push({ id: r.id, tipo, em: hoje() }); ok++; desenharFotos(); }
+      catch (x) { toast('Não foi possível enviar ' + (f.name || 'a foto') + ': ' + (x.message || '')); }
+    }
+    $('cl-foto-st').textContent = ok ? `${ok} foto(s) adicionada(s). Clique em "Salvar cliente" para guardar.` : '';
+  });
   function abrirCli(cl) {
-    cliEd = cl || null; $('m-cli-t').textContent = cl ? cl.nome : 'Novo cliente'; $('cl-err').hidden = true;
+    cliEd = cl || null; cliFotos = JSON.parse(JSON.stringify(cl?.fotos || [])); desenharFotos(); $('cl-foto-st').textContent = ''; $('m-cli-t').textContent = cl ? cl.nome : 'Novo cliente'; $('cl-err').hidden = true;
     $('cl-nome').value = cl?.nome || ''; $('cl-tel').value = cl?.telefone || ''; $('cl-cpf').value = cl?.cpf || ''; $('cl-end').value = cl?.endereco || '';
     $('cl-en').value = cl?.emerg_nome || ''; $('cl-ep').value = cl?.emerg_parentesco || ''; $('cl-et').value = cl?.emerg_tel || ''; $('cl-obs').value = cl?.obs || '';
     const hist = $('cl-hist'); hist.replaceChildren();
@@ -521,7 +646,7 @@
     e.preventDefault(); const nome = $('cl-nome').value.trim();
     if (nome.split(/\s+/).length < 2) { $('cl-err').textContent = 'Coloque o nome completo.'; $('cl-err').hidden = false; return; }
     if (dig($('cl-tel').value).length < 10) { $('cl-err').textContent = 'Coloque o telefone com DDD.'; $('cl-err').hidden = false; return; }
-    const d = { nome, telefone: $('cl-tel').value.trim(), cpf: $('cl-cpf').value.trim(), endereco: $('cl-end').value.trim(), emerg_nome: $('cl-en').value.trim(), emerg_parentesco: $('cl-ep').value.trim(), emerg_tel: $('cl-et').value.trim(), obs: $('cl-obs').value.trim(), atualizado: new Date().toISOString() };
+    const d = { nome, telefone: $('cl-tel').value.trim(), cpf: $('cl-cpf').value.trim(), endereco: $('cl-end').value.trim(), emerg_nome: $('cl-en').value.trim(), emerg_parentesco: $('cl-ep').value.trim(), emerg_tel: $('cl-et').value.trim(), obs: $('cl-obs').value.trim(), fotos: cliFotos, atualizado: new Date().toISOString() };
     try { if (cliEd) await cols.cli.doc(cliEd.id).set({ ...cliEd, ...d, id: undefined }); else { const r = await cols.cli.add({ ...d, criado: d.atualizado }); cliNovo = r.id; } fechar('m-cli'); toast('Cliente salvo'); if (voltarCon) { voltarCon = false; abrirCon(null, cliNovo); } }
     catch (x) { $('cl-err').textContent = x.message || 'Não foi possível salvar.'; $('cl-err').hidden = false; }
   });
@@ -645,6 +770,7 @@
     cols = { cli: db.collection('emp_clientes'), con: db.collection('emp_contratos'), cfg: db.collection('emp_config') };
     cols.cli.onSnapshot((s) => { clientes = s.docs.map((d) => ({ id: d.id, ...d.data() })); render(); });
     cols.con.onSnapshot((s) => { contratos = s.docs.map((d) => ({ id: d.id, ...d.data() })); render(); if (!$('m-con').hidden && conEd) { const n = contratos.find((x) => x.id === conEd.id); if (n && JSON.stringify(n.parcelas) !== JSON.stringify(conEd.parcelas)) { conEd = n; parcRasc = JSON.parse(JSON.stringify(n.parcelas)); desenharCon(); } } });
+    cols.cfg.doc('receber').onSnapshot((s) => { const d = s.data?.(); receber = Array.isArray(d?.itens) ? d.itens : []; render(); });
     cols.cfg.doc('geral').onSnapshot((s) => { const d = s.data?.(); if (d) cfg = { ...cfg, ...d, juros: Math.min(Number(d.juros ?? cfg.juros), LIM.juros), multa: Math.min(Number(d.multa ?? cfg.multa), LIM.multa), mora: Math.min(Number(d.mora ?? cfg.mora), LIM.mora) }; render(); });
   })();
 })();
