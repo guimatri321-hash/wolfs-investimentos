@@ -110,6 +110,8 @@
   .card .foto svg { width: 64px; height: 64px; color: #b9bdc8; }
   .card .selo { position: absolute; top: 10px; left: 10px; font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; background: #fff; border-radius: 999px; padding: 4px 9px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
   .card .selo.novo { color: var(--ok); }
+  .card .off-pct { position: absolute; top: 10px; right: 10px; font-size: .74rem; font-weight: 800; color: #fff; background: #e0262b; border-radius: 999px; padding: 4px 9px; }
+  .card .de, .m-preco .de { color: var(--muted); font-size: .82rem; text-decoration: line-through; display: block; margin-top: 4px; }
   .card .info { padding: 14px 16px 16px; display: grid; gap: 4px; align-content: start; }
   .card .cat { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
   .card h3 { font-size: .98rem; font-weight: 600; margin: 0; line-height: 1.32; }
@@ -355,7 +357,7 @@
     <div class="m-body">
       <div><div class="cat" id="pm-cat"></div><h2 id="pm-nome"></h2></div>
       <p class="desc" id="pm-desc"></p>
-      <div class="m-preco"><b class="num" id="pm-preco"></b><span id="pm-sub"></span></div>
+      <div class="m-preco"><s class="num de" id="pm-de" hidden></s><b class="num" id="pm-preco"></b><span id="pm-sub"></span></div>
       <div class="tabs" role="tablist" aria-label="Forma de pagamento">
         <button type="button" role="tab" data-f="pix" aria-selected="false">Pix</button>
         <button type="button" role="tab" data-f="cartao" aria-selected="true">Cartão</button>
@@ -462,9 +464,12 @@
     const b = el('button', 'card'); b.type = 'button'; b.setAttribute('aria-label', `${p.nome}, ${brl0(p.preco)}`);
     const f = el('div', 'foto'); fotoOuIcone(p, f);
     f.append(el('span', 'selo' + (p.condicao === 'Novo' ? ' novo' : ''), p.condicao));
+    if (p.desconto > 0) f.append(el('span', 'off-pct', `-${String(p.desconto).replace('.', ',')}%`));
     const info = el('div', 'info');
     const pr = el('div', 'preco num'); pr.append(document.createTextNode(brl(p.preco) + ' '), el('small', null, 'no Pix'));
-    info.append(el('div', 'cat', p.categoria), el('h3', null, p.nome), pr,
+    info.append(el('div', 'cat', p.categoria), el('h3', null, p.nome));
+    if (p.precoDe) info.append(el('div', 'de num', `de ${brl(p.precoDe)}`));
+    info.append(pr,
       el('div', 'parc', `ou ${CFG.cartaoMax}x de ${brl(cartaoTotal(p.preco, CFG.cartaoMax) / CFG.cartaoMax)}`),
       el('div', 'cred', `Crediário: entrada de ${brl0(Math.ceil(p.preco * CFG.entradaMin / 100))}`));
     b.append(f, info);
@@ -502,7 +507,7 @@
     fotoOuIcone(p, $('pm-foto'));
     $('pm-cat').textContent = `${p.categoria} · ${p.condicao}`; $('pm-nome').textContent = p.nome;
     $('pm-desc').textContent = p.descricao || ''; $('pm-desc').hidden = !p.descricao;
-    $('pm-preco').textContent = brl(p.preco); $('pm-sub').textContent = `no Pix · ou ${CFG.cartaoMax}x de ${brl(cartaoTotal(p.preco, CFG.cartaoMax) / CFG.cartaoMax)} no cartão`;
+    $('pm-preco').textContent = brl(p.preco); $('pm-de').textContent = p.precoDe ? `de ${brl(p.precoDe)} por` : ''; $('pm-de').hidden = !p.precoDe; $('pm-sub').textContent = `no Pix · ou ${CFG.cartaoMax}x de ${brl(cartaoTotal(p.preco, CFG.cartaoMax) / CFG.cartaoMax)} no cartão`;
     $('done').hidden = true; $('form').hidden = true; $('f-err').hidden = true;
     drawSim(); $('pm').hidden = false; document.body.style.overflow = 'hidden'; $('pm-fechar').focus();
   }

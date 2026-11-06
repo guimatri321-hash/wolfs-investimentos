@@ -100,8 +100,10 @@ function primeiroVencimento(dia: number) {
 const codigoPedido = () => "W" + randomBytes(4).toString("hex").toUpperCase().slice(0, 6);
 
 /* ---------------- Formatação ---------------- */
+const precoFinal = (p: any) => Math.round(p.preco_centavos * (1 - Number(p.desconto_pct || 0) / 100));
 const produtoPublico = (p: any) => ({
-  id: Number(p.id), nome: p.nome, categoria: p.categoria, condicao: p.condicao, preco: p.preco_centavos / 100,
+  id: Number(p.id), nome: p.nome, categoria: p.categoria, condicao: p.condicao, preco: precoFinal(p) / 100,
+  precoNormal: p.preco_centavos / 100, desconto: Number(p.desconto_pct || 0), precoDe: Number(p.desconto_pct) > 0 ? p.preco_centavos / 100 : null, doEstoque: !!p.estoque_id,
   descricao: p.descricao || "", imagem: p.imagem ? (/^https:\/\//.test(p.imagem) ? p.imagem : `${BASE}/imagem/${p.imagem}`) : null, imagemChave: p.imagem || null,
   ativo: p.ativo, ordem: p.ordem,
 });
@@ -155,7 +157,7 @@ async function criarPedido(b: any) {
   if (b.produtoId) {
     produto = (await q("SELECT * FROM wolfs_produtos WHERE id = $1 AND ativo", [Number(b.produtoId)]))[0];
     if (!produto) throw new HttpErro(404, "Esse produto não está mais disponível. Escolha outro.");
-    preco = produto.preco_centavos; produtoNome = produto.nome; categoria = produto.categoria; condicao = produto.condicao;
+    preco = precoFinal(produto); produtoNome = produto.nome; categoria = produto.categoria; condicao = produto.condicao;
   } else {
     if (forma !== "Crediário próprio" || !cfg.valorLivre) throw new HttpErro(400, "Escolha um produto.");
     preco = centavos(b.valor);
@@ -275,6 +277,7 @@ function limparProduto(b: any, novo: boolean) {
   if (novo || "categoria" in b) out.categoria = texto(b.categoria, 40) || "Outro";
   if (novo || "condicao" in b) out.condicao = ["Novo", "Seminovo", "Usado"].includes(b.condicao) ? b.condicao : "Novo";
   if (novo || "preco" in b) { out.preco_centavos = centavos(b.preco); if (!((out.preco_centavos as number) > 0)) throw new HttpErro(400, "Coloque o preço à vista."); }
+  if ("desconto" in b) out.desconto_pct = Math.round(Math.min(90, Math.max(0, Number(b.desconto) || 0)) * 100) / 100;
   if ("descricao" in b) out.descricao = texto(b.descricao, 300) || null;
   if ("imagem" in b) out.imagem = b.imagem ? texto(b.imagem, 100) : null;
   if ("ativo" in b) out.ativo = !!b.ativo;
@@ -373,10 +376,18 @@ Deno.serve(async (req: Request) => {
         if (!cols.length) return erro("Nada para salvar.");
         const r = (await q(`UPDATE wolfs_produtos SET ${cols.map((k, i) => `${k} = $${i + 1}`).join(", ")}, atualizado_em = now() WHERE id = $${cols.length + 1} RETURNING *`, [...cols.map((k) => p[k]), Number(partes[2])]))[0];
         if (!r) return erro("Produto não encontrado.", 404);
+        if (r.estoque_id) {
+          const extra: Record<string, unknown> = { no_site: r.ativo };
+          if ("preco_centavos" in p) extra.preco_sugerido = r.preco_centavos / 100;
+          if ("imagem" in p && r.imagem) extra.foto_id = r.imagem;
+          if ("nome" in p) { const e = (await q("SELECT dados FROM wolfs_docs WHERE colecao = 'estoque' AND id = $1", [r.estoque_id]))[0]?.dados; if (e && [e.modelo, e.armazenamento].filter(Boolean).join(" ") !== r.nome) { extra.modelo = r.nome; extra.armazenamento = ""; } }
+          await q("UPDATE wolfs_docs SET dados = dados || $1::jsonb, atualizado_em = now() WHERE colecao = 'estoque' AND id = $2", [JSON.stringify(extra), r.estoque_id]);
+        }
         return json(produtoPublico(r));
       }
       if (m === "DELETE" && partes[1] === "produtos" && partes[2]) {
-        await q("DELETE FROM wolfs_produtos WHERE id = $1", [Number(partes[2])]);
+        const r = (await q("DELETE FROM wolfs_produtos WHERE id = $1 RETURNING estoque_id", [Number(partes[2])]))[0];
+        if (r?.estoque_id) await q("UPDATE wolfs_docs SET dados = dados || '{\"no_site\": false}'::jsonb WHERE colecao = 'estoque' AND id = $1", [r.estoque_id]);
         return json({ ok: true });
       }
       if (m === "PUT" && partes[1] === "pedidos" && partes[2]) {

@@ -226,7 +226,9 @@
       <label class="f full" for="p-nome">Nome<input type="text" id="p-nome" placeholder="iPhone 13 128GB"></label>
       <label class="f" for="p-cat">Categoria<input type="text" id="p-cat" list="lista-cats" placeholder="Celular, Casa, Perfumes…" autocomplete="off"><datalist id="lista-cats"></datalist></label>
       <label class="f" for="p-cond">Condição<select id="p-cond"><option>Novo</option><option>Seminovo</option><option>Usado</option></select></label>
-      <label class="f" for="p-preco">Preço à vista (R$)<input type="number" id="p-preco" min="1" step="1"></label>
+      <label class="f" for="p-preco">Preço à vista (R$)<input type="number" id="p-preco" min="1" step="0.01"></label>
+      <label class="f" for="p-desc-pct">Desconto (%)<input type="number" id="p-desc-pct" min="0" max="90" step="0.5" placeholder="0"></label>
+      <p class="fine full" id="p-final"></p>
       <label class="f" for="p-ordem">Ordem na loja<input type="number" id="p-ordem" step="1"></label>
       <label class="f full" for="p-desc">Descrição curta (opcional)<input type="text" id="p-desc" placeholder="Bateria 90%, com caixa"></label>
       <label class="check full" for="p-ativo"><input type="checkbox" id="p-ativo" checked> Mostrar na loja</label>
@@ -366,8 +368,8 @@
     $('lista-prod').replaceChildren(...D.produtos.map((p) => {
       const r = el('div', 'prod-row' + (p.ativo ? '' : ' off'));
       const t = el('div', 'thumb'); if (p.imagem) { const i = el('img'); i.src = p.imagem; i.alt = ''; t.append(i); } else t.textContent = p.categoria;
-      const tx = el('div'); tx.append(el('b', null, p.nome), el('small', null, `${p.categoria} · ${p.condicao}${p.ativo ? '' : ' · fora da loja'}`));
-      const pr = el('div', 'preco'); pr.append(el('b', null, brl(p.preco)), el('small', null, 'à vista'));
+      const tx = el('div'); tx.append(el('b', null, p.nome), el('small', null, `${p.categoria} · ${p.condicao}${p.doEstoque ? ' · ligado ao estoque' : ''}${p.ativo ? '' : ' · fora da loja'}`));
+      const pr = el('div', 'preco'); pr.append(el('b', null, brl(p.preco)), el('small', null, p.desconto > 0 ? `com ${p.desconto}% off (de ${brl(p.precoNormal)})` : 'à vista'));
       const b = el('button', 'btn sm', 'Editar'); b.type = 'button'; b.onclick = () => abrirProduto(p);
       r.append(t, tx, pr, b); return r;
     }));
@@ -379,12 +381,17 @@
     if (src) { const i = el('img'); i.src = src; i.alt = ''; t.append(i); } else t.textContent = 'sem foto';
     $('p-foto-rem').hidden = !src; $('p-foto-btn').textContent = src ? 'Trocar foto' : 'Escolher foto';
   }
+  function mostrarFinal() {
+    const v = Number($('p-preco').value) || 0, d = Math.min(90, Math.max(0, Number($('p-desc-pct').value) || 0));
+    $('p-final').textContent = v ? (d ? `O cliente vê: de ${brl(v)} por ${brl(Math.round(v * (100 - d)) / 100)} (${d}% off). Crediário e cartão são calculados sobre o preço com desconto.` : `O cliente vê: ${brl(v)} à vista.`) : '';
+  }
+  $('p-preco').addEventListener('input', mostrarFinal); $('p-desc-pct').addEventListener('input', mostrarFinal);
   function abrirProduto(p) {
     editando = p; fotoChave = p?.imagemChave || null; fotoNova = null;
     $('prod-t').textContent = p ? 'Editar produto' : 'Novo produto';
     $('lista-cats').replaceChildren(...[...new Set([...D.produtos.map((x) => x.categoria), ...(D.config.categorias || [])])].map((c) => { const o = document.createElement('option'); o.value = c; return o; }));
     $('p-nome').value = p?.nome || ''; $('p-cat').value = p?.categoria || 'iPhone'; $('p-cond').value = p?.condicao || 'Novo';
-    $('p-preco').value = p?.preco || ''; $('p-ordem').value = p?.ordem ?? (D.produtos.length + 1); $('p-desc').value = p?.descricao || ''; $('p-ativo').checked = p ? p.ativo : true;
+    $('p-preco').value = p?.precoNormal ?? p?.preco ?? ''; $('p-desc-pct').value = p?.desconto || ''; mostrarFinal(); $('p-ordem').value = p?.ordem ?? (D.produtos.length + 1); $('p-desc').value = p?.descricao || ''; $('p-ativo').checked = p ? p.ativo : true;
     $('prod-err').hidden = true; mostrarFoto();
     const box = $('p-apagar-box'); box.replaceChildren();
     if (p) { const del = el('button', 'btn danger', 'Apagar'); del.type = 'button'; del.onclick = () => { box.replaceChildren(); const sim = el('button', 'btn danger', 'Sim, apagar'); sim.type = 'button'; sim.onclick = async () => { try { await api('admin/produtos/' + p.id, { method: 'DELETE' }); D.produtos = D.produtos.filter((x) => x !== p); desenharProdutos(); fechar(); toast('Produto apagado'); } catch (e) { toast(e.message); } }; const nao = el('button', 'btn', 'Não'); nao.type = 'button'; nao.onclick = () => abrirProduto(p); box.append(sim, nao); }; box.append(del); }
@@ -405,7 +412,7 @@
         const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.erro || 'Não foi possível enviar a foto.');
         fotoChave = d.imagem;
       }
-      const corpo = { nome: $('p-nome').value, categoria: $('p-cat').value, condicao: $('p-cond').value, preco: Number($('p-preco').value), ordem: Number($('p-ordem').value), descricao: $('p-desc').value, ativo: $('p-ativo').checked, imagem: fotoChave };
+      const corpo = { nome: $('p-nome').value, categoria: $('p-cat').value, condicao: $('p-cond').value, preco: Number($('p-preco').value), desconto: Number($('p-desc-pct').value) || 0, ordem: Number($('p-ordem').value), descricao: $('p-desc').value, ativo: $('p-ativo').checked, imagem: fotoChave };
       const salvo = editando ? await api('admin/produtos/' + editando.id, { method: 'PUT', body: JSON.stringify(corpo) }) : await api('admin/produtos', { method: 'POST', body: JSON.stringify(corpo) });
       if (editando) Object.assign(editando, salvo); else D.produtos.push(salvo);
       D.produtos.sort((a, b2) => a.ordem - b2.ordem || a.id - b2.id);
