@@ -120,6 +120,30 @@ function pedidoAdmin(p: any) {
   };
 }
 
+/* ---------------- Aviso no WhatsApp do dono (CallMeBot) ---------------- */
+// Precisa do segredo WOLFS_WA_APIKEY no Supabase e do WhatsApp em Configurações. Sem CPF nem endereço na mensagem.
+async function avisarDono(cfg: Config, p: any) {
+  const key = Deno.env.get("WOLFS_WA_APIKEY") || "";
+  const num = soDigitos(cfg.whatsapp);
+  if (!key || num.length < 10) return;
+  const fone = num.length <= 11 ? "55" + num : num;
+  const br = (v: number) => "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const plano = p.forma === "Crediário próprio"
+    ? `Entrada ${br(p.entrada)} + ${p.parcelas}x de ${br(p.valorParcela)} (vence dia ${p.diaVencimento}, 1ª em ${p.primeiroVenc?.split("-").reverse().join("/")})`
+    : p.forma === "Pix" ? `${br(p.total)} no Pix` : `${p.parcelas}x de ${br(p.valorParcela)} no cartão`;
+  const msg = [
+    p.forma === "Crediário próprio" ? "*Novo crediário no site Wolfs*" : "*Novo pedido no site Wolfs*",
+    `Pedido: ${p.codigo}`, `Cliente: ${p.nome}`, `WhatsApp: ${p.telefone}`,
+    `Produto: ${p.produtoNome} (${br(p.preco)} à vista)`, plano,
+    "Dados completos em wolfs-investimentos.pages.dev/loja",
+  ].join("\n");
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(`https://api.callmebot.com/whatsapp.php?phone=${fone}&text=${encodeURIComponent(msg)}&apikey=${encodeURIComponent(key)}`, { signal: ctl.signal });
+    if (!r.ok) console.error("callmebot", r.status, (await r.text()).slice(0, 200));
+  } finally { clearTimeout(t); }
+}
+
 /* ---------------- Pedido do cliente ---------------- */
 async function criarPedido(b: any) {
   const cfg = await lerConfig();
@@ -187,6 +211,10 @@ async function criarPedido(b: any) {
   const cols = Object.keys(p);
   const row = (await q(`INSERT INTO wolfs_pedidos (${cols.join(",")}) VALUES (${cols.map((_, i) => "$" + (i + 1)).join(",")}) RETURNING *`, cols.map((k) => p[k])))[0];
   const ped = pedidoAdmin(row);
+  const aviso = avisarDono(cfg, ped).catch((e) => console.error("aviso whatsapp", e));
+  // deno-lint-ignore no-explicit-any
+  const rt = (globalThis as any).EdgeRuntime;
+  if (rt?.waitUntil) rt.waitUntil(aviso); else await aviso;
   return { codigo: ped.codigo, forma: ped.forma, produtoNome: ped.produtoNome, preco: ped.preco, entrada: ped.entrada, parcelas: ped.parcelas, valorParcela: ped.valorParcela, total: ped.total, jurosMes: ped.jurosMes, primeiroVenc: ped.primeiroVenc, diaVencimento: ped.diaVencimento };
 }
 

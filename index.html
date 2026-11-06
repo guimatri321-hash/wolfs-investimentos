@@ -175,6 +175,7 @@
   .aviso-ok { display: grid; gap: 4px; padding: 16px; border-radius: 16px; background: var(--ok-soft); }
   .aviso-ok b { font-family: var(--f-display); font-size: 1.1rem; color: var(--ok); }
   .codigo { font-family: var(--f-mono); font-size: 1.15rem; letter-spacing: .08em; color: var(--fg); }
+  .ultimo-passo { margin: 0; font-weight: 700; color: #1f9d55; }
   .wa { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-weight: 700; color: #fff; background: #1f9d55; border-radius: 999px; padding: 12px 18px; }
 
   /* Crediário */
@@ -540,7 +541,7 @@
     drawC2(); fecharProduto(); abrirCadastro();
   });
 
-  function mostrarFeito(box, r, credi) {
+  function mostrarFeito(box, r, credi, nome) {
     const aviso = el('div', 'aviso-ok'); aviso.append(el('b', null, credi ? 'Cadastro recebido!' : 'Pedido recebido!'), el('span', null, credi ? CFG.avisoAprovacao : CFG.avisoPedido));
     const cod = el('p'); cod.append(document.createTextNode('Número do seu pedido: '), el('span', 'codigo', r.codigo));
     let resumo;
@@ -549,9 +550,13 @@
     else resumo = `${r.produtoNome}: ${r.parcelas}x de ${brl(r.valorParcela)} no cartão (total ${brl(r.total)}).`;
     const parts = [aviso, cod, el('p', null, resumo)];
     if (CFG.whatsapp) {
-      const a = el('a', 'wa', 'Falar com a Wolfs no WhatsApp'); a.target = '_blank'; a.rel = 'noopener';
-      a.href = `https://wa.me/${CFG.whatsapp.length <= 11 ? '55' + CFG.whatsapp : CFG.whatsapp}?text=${encodeURIComponent(`Olá! Acabei de fazer o pedido ${r.codigo} no site da Wolfs.`)}`;
-      parts.push(a);
+      const num = CFG.whatsapp.length <= 11 ? '55' + CFG.whatsapp : CFG.whatsapp;
+      const msg = `Olá, Wolfs! ${credi ? 'Acabei de fazer o cadastro do crediário' : 'Acabei de fazer um pedido'} no site.\n\nPedido: ${r.codigo}\n${nome ? `Nome: ${nome}\n` : ''}${resumo}\n\nAguardo o contato.`;
+      const url = `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+      const passo = el('p', 'ultimo-passo', credi ? 'Último passo: toque no botão abaixo e envie a mensagem no WhatsApp para o vendedor analisar seu crediário.' : 'Toque no botão abaixo e envie a mensagem no WhatsApp para agilizar seu atendimento.');
+      const a = el('a', 'wa', credi ? 'Enviar meu crediário no WhatsApp' : 'Enviar pedido no WhatsApp'); a.target = '_blank'; a.rel = 'noopener'; a.href = url;
+      parts.push(passo, a);
+      try { window.open(url, '_blank', 'noopener'); } catch {}
     }
     box.replaceChildren(...parts); box.hidden = false;
   }
@@ -564,7 +569,7 @@
     const b = $('f-enviar'); b.disabled = true; b.textContent = 'Enviando…'; $('f-err').hidden = true;
     try {
       const r = await api('pedidos', { method: 'POST', body: JSON.stringify({ produtoId: prod.id, forma: forma === 'pix' ? 'Pix' : 'Cartão', parcelas: nCartao, nome, telefone: tel, cidade: $('f-cidade').value.trim() }) });
-      $('form').hidden = true; mostrarFeito($('done'), r, false);
+      $('form').hidden = true; mostrarFeito($('done'), r, false, nome);
     } catch (err) { $('f-err').textContent = err.message; $('f-err').hidden = false; }
     finally { b.disabled = false; b.textContent = 'Enviar pedido'; }
   });
@@ -639,7 +644,7 @@
         nome: f.nome, cpf: f.cpf, telefone: f.tel, cep: f.cep, rua: f.rua, numero: f.numero, complemento: f.compl, bairro: f.bairro, cidade: f.cidade, uf: f.uf,
         emergNome: f.en, emergParentesco: f.ep, emergTel: f.et,
       }) });
-      $('c2-form').hidden = true; mostrarFeito($('c2-done'), r, true); $('c2-done').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      $('c2-form').hidden = true; mostrarFeito($('c2-done'), r, true, f.nome); $('c2-done').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (err) { $('c2-err').textContent = err.message; $('c2-err').hidden = false; }
     finally { b.disabled = false; b.textContent = 'Enviar cadastro'; }
   });
