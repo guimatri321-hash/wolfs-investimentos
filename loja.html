@@ -143,7 +143,7 @@
         </div>
         <div class="toolbar">
           <input type="search" id="busca" placeholder="Buscar nome, CPF, telefone, produto ou código" aria-label="Buscar pedidos">
-          <select id="f-status" aria-label="Status"><option value="">Todos os status</option><option value="novo">Novo</option><option value="em_analise">Em análise</option><option value="aprovado">Aprovado</option><option value="recusado">Recusado</option><option value="concluido">Concluído</option><option value="cancelado">Cancelado</option></select>
+          <select id="f-status" aria-label="Status"><option value="abertos" selected>Em aberto</option><option value="encerrados">Encerrados (recusados, cancelados, concluídos)</option><option value="">Todos os status</option><option value="novo">Novo</option><option value="em_analise">Em análise</option><option value="aprovado">Aprovado</option><option value="recusado">Recusado</option><option value="concluido">Concluído</option><option value="cancelado">Cancelado</option></select>
           <select id="f-forma" aria-label="Forma"><option value="">Todas as formas</option><option>Crediário próprio</option><option>Pix</option><option>Crédito parcelado</option><option>Crédito à vista</option></select>
         </div>
         <div id="lista-ped" style="display:grid;gap:10px"></div>
@@ -310,7 +310,8 @@
     $('k-cred-n').textContent = `${cred.reduce((a, p) => a + p.parcelas, 0)} parcelas de ${cred.length} cliente${cred.length === 1 ? '' : 's'}`;
     desenharGraficos(ps);
     const q = $('busca').value.trim().toLowerCase(), st = $('f-status').value, fm = $('f-forma').value;
-    const lista = ps.filter((p) => (!st || p.status === st) && (!fm || p.forma === fm) && (!q || [p.nome, p.cpf, p.telefone, p.produtoNome, p.codigo].join(' ').toLowerCase().includes(q)));
+    const ABERTOS = ['novo', 'em_analise', 'aprovado'];
+    const lista = ps.filter((p) => (!st || (st === 'abertos' ? ABERTOS.includes(p.status) : st === 'encerrados' ? !ABERTOS.includes(p.status) : p.status === st)) && (!fm || p.forma === fm) && (!q || [p.nome, p.cpf, p.telefone, p.produtoNome, p.codigo].join(' ').toLowerCase().includes(q)));
     $('lista-ped').replaceChildren(...lista.map((p) => {
       const box = el('article', 'ped' + (p.status === 'novo' ? ' novo' : ''));
       const top = el('div', 'ped-top'); const a = el('div'); a.append(el('b', null, `${p.nome} · ${p.produtoNome}`), el('small', null, `${p.codigo} · ${dataHora(p.criadoEm)} · ${p.forma}`));
@@ -328,12 +329,13 @@
       const cp = el('button', 'btn sm', 'Copiar para o painel'); cp.type = 'button'; cp.onclick = () => copiar(codigoPainel(p), 'Copiado. Cole no painel em "Colar pedido do site".');
       const obs = el('input'); obs.type = 'text'; obs.placeholder = 'Anotação interna'; obs.value = p.obsAdmin || ''; obs.style.flex = '1 1 200px'; obs.style.width = 'auto'; obs.setAttribute('aria-label', 'Anotação');
       obs.onchange = async () => { try { Object.assign(p, await api('admin/pedidos/' + p.id, { method: 'PUT', body: JSON.stringify({ obsAdmin: obs.value }) })); toast('Anotação salva'); } catch (e) { toast(e.message); } };
-      const mudar = async (st) => { try { Object.assign(p, await api('admin/pedidos/' + p.id, { method: 'PUT', body: JSON.stringify({ status: st }) })); toast('Pedido ' + STATUS[st].toLowerCase()); desenharPedidos(); } catch (e) { toast(e.message); } };
+      const mudar = async (st) => { try { Object.assign(p, await api('admin/pedidos/' + p.id, { method: 'PUT', body: JSON.stringify({ status: st }) })); toast(['recusado', 'cancelado', 'concluido'].includes(st) ? `Pedido ${STATUS[st].toLowerCase()}. Ele foi para "Encerrados".` : 'Pedido ' + STATUS[st].toLowerCase()); desenharPedidos(); } catch (e) { toast(e.message); } };
       const bt = (txt, st, cls) => { const b = el('button', 'btn sm ' + cls, txt); b.type = 'button'; b.onclick = () => mudar(st); return b; };
       const rapidos = [];
       if (['novo', 'em_analise'].includes(p.status)) rapidos.push(bt('✓ Aprovar', 'aprovado', 'ok'), bt('✕ Recusar', 'recusado', 'danger'));
       if (p.status === 'aprovado') rapidos.push(bt('✓ Concluir (entregue)', 'concluido', 'ok'));
       if (!['cancelado', 'recusado', 'concluido'].includes(p.status)) rapidos.push(bt('Cancelar pedido', 'cancelado', 'danger'));
+      if (['recusado', 'cancelado'].includes(p.status)) { const ex = el('button', 'btn sm danger', 'Excluir de vez'); ex.type = 'button'; ex.onclick = async () => { if (ex.dataset.ok !== '1') { ex.dataset.ok = '1'; ex.textContent = 'Clique de novo para excluir'; return; } try { await api('admin/pedidos/' + p.id, { method: 'DELETE' }); D.pedidos = D.pedidos.filter((x) => x.id !== p.id); toast('Pedido excluído'); desenharPedidos(); } catch (e) { toast(e.message); } }; rapidos.push(ex); }
       acts.append(...rapidos, sel, wa, cp, obs);
       box.append(top, info, acts); return box;
     }));
