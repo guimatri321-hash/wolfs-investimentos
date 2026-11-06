@@ -33,7 +33,7 @@ function cpfValido(c: string) {
 }
 
 /* ---------------- Configurações ---------------- */
-const COLECOES = ["estoque", "clientes", "vendas", "mercado", "config"];
+const COLECOES = ["estoque", "clientes", "vendas", "mercado", "config", "emp_clientes", "emp_contratos", "emp_config"];
 const CATEGORIAS = ["iPhone", "Celular", "Fone de ouvido", "Relógio", "Caixa de som", "Informática", "Games", "Casa", "Beleza", "Perfumes", "Moda", "Acessórios", "Outro"];
 const CONFIG_PADRAO = {
   nomeSite: "Wolfs LTDA Investimentos",

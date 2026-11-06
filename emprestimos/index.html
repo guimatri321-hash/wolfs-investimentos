@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#07070a">
+<title>Wolfs Empréstimos</title>
+<link rel="icon" href="/fotos/logo.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --panel: rgba(10,10,12,.55); --panel2: rgba(255,255,255,.06); --line: rgba(255,255,255,.12);
+    --fg: #f3f3f4; --muted: #a2a3a8; --faint: #6c6d73;
+    --red: #ff3b3b; --red-soft: rgba(255,59,59,.13);
+    --ok: #4fd18b; --warn: #f5b84a; --bad: #ff5f57; --info: #8fb6ff;
+    --f-display: "Sora", "Segoe UI", system-ui, sans-serif;
+    --f-body: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #050505; color: var(--fg); }
+  body { font-family: var(--f-body); font-size: 15px; line-height: 1.5; min-height: 100vh; }
+  [hidden] { display: none !important; }
+  .fundo { position: fixed; inset: 0; z-index: -2; background: #050505 url("/fotos/fundo.jpg") center / cover no-repeat; }
+  @media (max-aspect-ratio: 1/1) { .fundo { background-image: url("/fotos/fundo-vertical.jpg"); } }
+  .fundo::after { content: ""; position: absolute; inset: 0; background: rgba(5,5,5,.45); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-left)); }
+
+  header { position: sticky; top: 0; z-index: 10; background: rgba(5,5,7,.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 0; flex-wrap: wrap; }
+  .brand { display: flex; gap: 12px; align-items: center; color: inherit; text-decoration: none; }
+  .brand img { width: 64px; height: 44px; object-fit: cover; border-radius: 10px; box-shadow: 0 0 0 1px rgba(255,59,59,.45); }
+  .brand b { font-family: var(--f-display); font-weight: 800; font-size: 1.25rem; letter-spacing: .02em; }
+  .brand b span { font-weight: 500; font-size: .8rem; letter-spacing: .3em; color: var(--muted); margin-left: 6px; }
+  .brand small { display: block; color: var(--muted); font-size: .8rem; }
+  .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: rgba(255,255,255,.05); border-radius: 12px; padding: 10px 16px; font-weight: 700; font-size: .88rem; color: var(--fg); text-decoration: none; white-space: nowrap; }
+  .btn:hover { background: rgba(255,255,255,.1); }
+  .btn.red { background: linear-gradient(180deg, #ff4b4b, #d61f1f); border-color: transparent; box-shadow: 0 10px 26px -12px rgba(255,59,59,.8); }
+  .btn.ok { background: #1f9d55; border-color: #1f9d55; }
+  .btn.sm { padding: 6px 11px; font-size: .78rem; border-radius: 9px; }
+  .btn.ghost-bad { color: var(--bad); border-color: rgba(255,95,87,.4); }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .tab { border: 0; background: none; color: var(--muted); font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; white-space: nowrap; font-size: .95rem; }
+  .tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--red); }
+  .tab .count { font-family: var(--f-mono); font-size: .7rem; background: rgba(255,255,255,.08); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; margin-left: 6px; }
+  .tab .count.bad { background: rgba(255,95,87,.18); color: var(--bad); border-color: rgba(255,95,87,.4); }
+
+  main { padding: 26px 0 60px; }
+  .view-head { display: flex; justify-content: space-between; align-items: end; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+  .eyebrow { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--red); font-weight: 800; }
+  .view-head h2 { font-family: var(--f-display); font-size: 1.7rem; margin: 2px 0 4px; text-shadow: 0 2px 10px rgba(0,0,0,.7); }
+  .view-head p { margin: 0; color: var(--muted); max-width: 70ch; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpi, .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 18px 40px -22px rgba(0,0,0,.9); }
+  .kpi { padding: 18px; }
+  .kpi .l { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .kpi .v { font-family: var(--f-display); font-size: 1.75rem; font-weight: 700; margin-top: 6px; letter-spacing: -.02em; }
+  .kpi .s { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  .kpi.hot { border-color: rgba(255,59,59,.5); background: linear-gradient(180deg, rgba(255,59,59,.16), var(--panel)); }
+  .kpi .v.bad { color: var(--bad); } .kpi .v.ok { color: var(--ok); }
+  .card { padding: 18px; margin-bottom: 16px; min-width: 0; }
+  .card h3 { margin: 0 0 4px; font-family: var(--f-display); font-size: 1.05rem; }
+  .card .sub { color: var(--muted); font-size: .84rem; margin: 0 0 14px; }
+  .grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  input[type=text], input[type=tel], input[type=number], input[type=date], input[type=search], input[type=password], select, textarea {
+    background: rgba(0,0,0,.45); border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; min-width: 0; width: 100%;
+  }
+  .filters input[type=search] { flex: 1 1 260px; width: auto; }
+  .filters select { width: auto; flex: 0 1 220px; }
+  select option { background: #141416; }
+  .tbox { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th { text-align: left; font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 11px 10px; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  td.r, th.r { text-align: right; } td.r { font-family: var(--f-mono); white-space: nowrap; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: rgba(255,255,255,.04); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; background: rgba(255,255,255,.06); border: 1px solid var(--line); }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-ok { color: var(--ok); } .p-bad { color: var(--bad); } .p-warn { color: var(--warn); } .p-info { color: var(--info); } .p-mut { color: var(--muted); }
+  .vazio { text-align: center; padding: 34px 10px; color: var(--muted); }
+  .vazio b { display: block; color: var(--fg); font-size: 1.05rem; margin-bottom: 4px; }
+  .lista { display: grid; gap: 10px; }
+  .cob { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid var(--line); }
+  .cob.atraso { border-color: rgba(255,95,87,.45); background: rgba(255,95,87,.07); }
+  .cob.hoje { border-color: rgba(245,184,74,.45); background: rgba(245,184,74,.07); }
+  .cob .dia { width: 58px; text-align: center; border-radius: 12px; background: rgba(0,0,0,.35); padding: 6px 0; }
+  .cob .dia b { display: block; font-family: var(--f-display); font-size: 1.3rem; line-height: 1.1; }
+  .cob .dia small { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .cob .info b { display: block; } .cob .info span { color: var(--muted); font-size: .84rem; }
+  .cob .val { text-align: right; display: grid; gap: 6px; justify-items: end; }
+  .cob .val strong { font-family: var(--f-mono); font-size: 1.05rem; }
+  .cob .val .bts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: end; }
+  @media (max-width: 640px) { .cob { grid-template-columns: auto minmax(0, 1fr); } .cob .val { grid-column: 1 / -1; justify-items: stretch; text-align: left; } .cob .val .bts { justify-content: start; } }
+  .chart svg { width: 100%; height: 240px; display: block; }
+  .chart text { fill: var(--muted); font-size: 11px; font-family: var(--f-mono); }
+  .legend { display: flex; gap: 14px; font-size: .78rem; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .meta-bar { height: 12px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; margin: 10px 0 6px; }
+  .meta-bar i { display: block; height: 100%; background: linear-gradient(90deg, #d61f1f, #ff4b4b); border-radius: 999px; }
+  .rank { display: grid; gap: 8px; }
+  .rank div { display: flex; justify-content: space-between; gap: 10px; font-size: .88rem; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.04); }
+
+  .modal-bg { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+  .modal { width: min(760px, 100%); background: rgba(16,16,18,.96); border: 1px solid var(--line); border-radius: 20px; padding: 22px; display: grid; gap: 14px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal h3 { margin: 0; font-family: var(--f-display); font-size: 1.2rem; }
+  .modal .x { justify-self: end; margin-top: -6px; }
+  .mhead { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; }
+  .fields .full { grid-column: 1 / -1; }
+  label.f { display: grid; gap: 5px; font-size: .76rem; color: var(--muted); font-weight: 600; }
+  .sect { font-size: .68rem; text-transform: uppercase; letter-spacing: .14em; color: var(--red); font-weight: 800; margin-top: 4px; }
+  .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .resumo div { background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .resumo small { display: block; color: var(--muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; }
+  .resumo b { font-family: var(--f-mono); font-size: 1rem; }
+  .row-end { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .err { color: var(--bad); font-size: .85rem; margin: 0; }
+  .fine { color: var(--faint); font-size: .76rem; margin: 0; }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 60; background: #f3f3f4; color: #0b0b0d; padding: 11px 18px; border-radius: 12px; font-weight: 700; font-size: .88rem; }
+  .banner { background: rgba(245,184,74,.12); border: 1px solid rgba(245,184,74,.4); color: var(--warn); padding: 10px 14px; border-radius: 12px; margin-bottom: 14px; font-size: .88rem; }
+</style>
+</head>
+<body>
+<div class="fundo" aria-hidden="true"></div>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <a class="brand" href="#geral"><img src="/fotos/logo.jpg" alt=""><div><b>WOLFS<span>EMPRÉSTIMOS</span></b><small>Contratos, parcelas e cobranças</small></div></a>
+      <div class="acts">
+        <a class="btn" href="/admin">Painel da loja</a>
+        <button class="btn" type="button" id="b-cliente">+ Cliente</button>
+        <button class="btn red" type="button" id="b-contrato">+ Novo empréstimo</button>
+        <button class="btn" type="button" onclick="wolfsSair()">Sair</button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="geral">Visão geral</button>
+      <button class="tab" role="tab" data-tab="cobrancas">Cobranças <span class="count" id="n-cob">0</span></button>
+      <button class="tab" role="tab" data-tab="contratos">Empréstimos <span class="count" id="n-con">0</span></button>
+      <button class="tab" role="tab" data-tab="clientes">Clientes <span class="count" id="n-cli">0</span></button>
+      <button class="tab" role="tab" data-tab="config">Configurações</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="banner" id="banner" hidden></div>
+
+  <!-- VISÃO GERAL -->
+  <section class="view" id="v-geral">
+    <div class="view-head"><div><div class="eyebrow">Visão geral</div><h2>Seu dinheiro na rua</h2><p>Quanto você emprestou, quanto já voltou, o que vence e quem está atrasado.</p></div></div>
+    <div class="kpis">
+      <div class="kpi hot"><div class="l">A receber</div><div class="v num" id="k-receber">R$ 0</div><div class="s" id="k-receber-s">0 parcelas em aberto</div></div>
+      <div class="kpi"><div class="l">Capital na rua</div><div class="v num" id="k-rua">R$ 0</div><div class="s">Emprestado e ainda não devolvido</div></div>
+      <div class="kpi"><div class="l">Já recebido</div><div class="v num ok" id="k-recebido">R$ 0</div><div class="s" id="k-recebido-s">Total pago pelos clientes</div></div>
+      <div class="kpi"><div class="l">Lucro com juros</div><div class="v num" id="k-lucro">R$ 0</div><div class="s" id="k-lucro-s">Previsto: R$ 0</div></div>
+      <div class="kpi"><div class="l">Em atraso</div><div class="v num bad" id="k-atraso">R$ 0</div><div class="s" id="k-atraso-s">0 parcela(s) · 0% do a receber</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card chart"><h3>Recebimentos por mês</h3><p class="sub">Recebido nos últimos meses e previsto para os próximos.</p><div id="g-meses"></div>
+        <div class="legend"><span><i style="background:#4fd18b"></i>Recebido</span><span><i style="background:#ff3b3b"></i>Previsto</span><span><i style="background:#ff5f57;opacity:.5"></i>Atrasado</span></div></div>
+      <div>
+        <div class="card"><h3>Meta de lucro</h3><p class="sub" id="meta-sub">Defina em Configurações.</p><div class="meta-bar"><i id="meta-bar" style="width:0"></i></div><div class="row-end"><span class="num" id="meta-v">R$ 0</span><span class="fine" id="meta-p">0%</span></div></div>
+        <div class="card"><h3>Vence nos próximos 7 dias</h3><p class="sub" id="prox-sub">Nada vencendo.</p><div class="rank" id="prox"></div></div>
+      </div>
+    </div>
+    <div class="card"><h3>Maiores devedores</h3><p class="sub">Clientes com mais dinheiro em aberto.</p><div class="rank" id="top-dev"></div></div>
+  </section>
+
+  <!-- COBRANÇAS -->
+  <section class="view" id="v-cobrancas" hidden>
+    <div class="view-head"><div><div class="eyebrow">Cobranças</div><h2>Agenda de pagamentos</h2><p>Atrasadas primeiro, depois as que vencem hoje e as próximas. Toque em "Cobrar" para mandar a mensagem pronta no WhatsApp.</p></div></div>
+    <div class="filters">
+      <input type="search" id="c-busca" placeholder="Buscar cliente">
+      <select id="c-filtro"><option value="abertas">Todas em aberto</option><option value="atraso">Só atrasadas</option><option value="hoje">Vencem hoje</option><option value="7">Próximos 7 dias</option><option value="30">Próximos 30 dias</option><option value="pagas">Pagas</option></select>
+    </div>
+    <div class="lista" id="l-cob"></div>
+  </section>
+
+  <!-- CONTRATOS -->
+  <section class="view" id="v-contratos" hidden>
+    <div class="view-head"><div><div class="eyebrow">Empréstimos</div><h2>Todos os contratos</h2><p>Clique num empréstimo para ver as parcelas, registrar pagamento, mudar datas ou valores.</p></div><button class="btn red" type="button" data-novo="contrato">+ Novo empréstimo</button></div>
+    <div class="filters">
+      <input type="search" id="e-busca" placeholder="Buscar cliente ou observação">
+      <select id="e-filtro"><option value="ativo">Ativos</option><option value="atraso">Com atraso</option><option value="quitado">Quitados</option><option value="cancelado">Cancelados</option><option value="">Todos</option></select>
+    </div>
+    <div class="card tbox"><table><thead><tr><th>Cliente</th><th>Data</th><th class="r">Emprestado</th><th class="r">Parcelas</th><th class="r">Total a pagar</th><th class="r">Pago</th><th class="r">Falta</th><th>Próx. venc.</th><th>Status</th></tr></thead><tbody id="t-con"></tbody></table><div class="vazio" id="con-vazio" hidden><b>Nenhum empréstimo aqui</b>Clique em "+ Novo empréstimo" para registrar o primeiro.</div></div>
+  </section>
+
+  <!-- CLIENTES -->
+  <section class="view" id="v-clientes" hidden>
+    <div class="view-head"><div><div class="eyebrow">Clientes</div><h2>Quem pegou dinheiro</h2><p>Dados, contato de emergência e histórico de cada cliente.</p></div><button class="btn red" type="button" data-novo="cliente">+ Cliente</button></div>
+    <div class="filters"><input type="search" id="cl-busca" placeholder="Buscar nome, CPF ou telefone"></div>
+    <div class="card tbox"><table><thead><tr><th>Nome</th><th>Telefone</th><th>CPF</th><th class="r">Empréstimos</th><th class="r">Em aberto</th><th class="r">Atrasado</th><th>Situação</th></tr></thead><tbody id="t-cli"></tbody></table><div class="vazio" id="cli-vazio" hidden><b>Nenhum cliente ainda</b>Cadastre o primeiro em "+ Cliente".</div></div>
+  </section>
+
+  <!-- CONFIG -->
+  <section class="view" id="v-config" hidden>
+    <div class="view-head"><div><div class="eyebrow">Configurações</div><h2>Regras e mensagens</h2><p>Valores padrão para novos empréstimos e a mensagem de cobrança.</p></div></div>
+    <div class="card">
+      <div class="fields">
+        <label class="f">Juros padrão (% ao mês, máx. 1)<input type="number" id="cf-juros" min="0" max="1" step="0.05"></label>
+        <label class="f">Multa por atraso (%, máx. 2)<input type="number" id="cf-multa" min="0" max="2" step="0.5"></label>
+        <label class="f">Juros de atraso (% ao mês, máx. 1)<input type="number" id="cf-mora" min="0" max="1" step="0.1"></label>
+        <label class="f">Meta de lucro com juros (R$)<input type="number" id="cf-meta" min="0" step="100"></label>
+        <label class="f">Prazo da meta<input type="date" id="cf-meta-fim"></label>
+        <label class="f">Avisar quantos dias antes<input type="number" id="cf-antes" min="0" max="15" step="1"></label>
+        <label class="f full">Mensagem de cobrança (use {nome}, {valor}, {vencimento}, {parcela})<textarea id="cf-msg" rows="3"></textarea></label>
+        <label class="f full">Mensagem de lembrete antes do vencimento<textarea id="cf-msg-antes" rows="3"></textarea></label>
+      </div>
+      <p class="fine" style="margin-top:10px">Os limites seguem a lei para empréstimos entre pessoas: juros até 1% ao mês (Lei da Usura), multa até 2% e juros de atraso até 1% ao mês. Se você abrir uma Empresa Simples de Crédito (ESC), esses limites podem ser liberados.</p>
+      <div class="row-end" style="margin-top:12px"><span></span><button class="btn red" type="button" id="cf-salvar">Salvar configurações</button></div>
+    </div>
+  </section>
+</main>
+
+<!-- Modal cliente -->
+<div class="modal-bg" id="m-cli" hidden><form class="modal" id="f-cli" novalidate>
+  <div class="mhead"><h3 id="m-cli-t">Novo cliente</h3><button class="btn sm" type="button" data-fechar>Fechar</button></div>
+  <div class="fields">
+    <label class="f full">Nome completo<input type="text" id="cl-nome" autocomplete="off"></label>
+    <label class="f">Telefone (WhatsApp)<input type="tel" id="cl-tel" placeholder="67 99999-9999"></label>
+    <label class="f">CPF<input type="text" id="cl-cpf" inputmode="numeric" placeholder="000.000.000-00"></label>
+    <label class="f full">Endereço<input type="text" id="cl-end" placeholder="Rua, número, bairro, cidade"></label>
+    <div class="sect full">Contato de emergência</div>
+    <label class="f">Nome<input type="text" id="cl-en"></label>
+    <label class="f">Parentesco<input type="text" id="cl-ep" placeholder="Mãe, irmão…"></label>
+    <label class="f">Telefone<input type="tel" id="cl-et"></label>
+    <label class="f full">Observações<textarea id="cl-obs" rows="2" placeholder="Indicação, onde trabalha, garantia…"></textarea></label>
+  </div>
+  <div id="cl-hist"></div>
+  <p class="err" id="cl-err" hidden></p>
+  <div class="row-end"><span id="cl-del-box"></span><button class="btn red" type="submit">Salvar cliente</button></div>
+</form></div>
+
+<!-- Modal contrato -->
+<div class="modal-bg" id="m-con" hidden><form class="modal" id="f-con" novalidate>
+  <div class="mhead"><h3 id="m-con-t">Novo empréstimo</h3><button class="btn sm" type="button" data-fechar>Fechar</button></div>
+  <div class="fields">
+    <label class="f full">Cliente<select id="co-cli"></select></label>
+    <label class="f">Valor emprestado (R$)<input type="number" id="co-valor" min="1" step="0.01"></label>
+    <label class="f">Data do empréstimo<input type="date" id="co-data"></label>
+    <label class="f">Juros (% ao mês, máx. 1)<input type="number" id="co-juros" min="0" max="1" step="0.05"></label>
+    <label class="f">Número de parcelas<input type="number" id="co-n" min="1" max="60" step="1"></label>
+    <label class="f">Frequência<select id="co-per"><option value="mensal">Mensal</option><option value="quinzenal">Quinzenal</option><option value="semanal">Semanal</option></select></label>
+    <label class="f">1º vencimento<input type="date" id="co-venc"></label>
+    <label class="f full">Garantia / observações<input type="text" id="co-obs" placeholder="Ex.: nota promissória assinada, aparelho como garantia…"></label>
+  </div>
+  <div class="resumo" id="co-resumo"></div>
+  <div id="co-parc"></div>
+  <p class="fine">As parcelas são calculadas com juros de até 1% ao mês. Depois de salvar, você pode mudar a data de cada parcela e registrar pagamentos parciais ou adiantados.</p>
+  <p class="err" id="co-err" hidden></p>
+  <div class="row-end"><span id="co-del-box"></span><div class="acts"><button class="btn" type="button" id="co-regerar" hidden>Recalcular parcelas</button><button class="btn red" type="submit">Salvar empréstimo</button></div></div>
+</form></div>
+
+<!-- Modal pagamento -->
+<div class="modal-bg" id="m-pag" hidden><form class="modal" id="f-pag" novalidate style="width:min(460px,100%)">
+  <div class="mhead"><h3>Registrar pagamento</h3><button class="btn sm" type="button" data-fechar>Fechar</button></div>
+  <p id="pg-info" style="margin:0;color:var(--muted)"></p>
+  <div class="resumo" id="pg-resumo"></div>
+  <div class="fields">
+    <label class="f">Valor recebido (R$)<input type="number" id="pg-valor" min="0.01" step="0.01"></label>
+    <label class="f">Data do pagamento<input type="date" id="pg-data"></label>
+  </div>
+  <p class="err" id="pg-err" hidden></p>
+  <div class="row-end"><button class="btn ghost-bad" type="button" id="pg-desfazer" hidden>Desfazer pagamentos desta parcela</button><button class="btn ok" type="submit">Confirmar recebimento</button></div>
+</form></div>
+
+<script src="/wolfs-conexao.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
+  const brl = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const brl0 = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  const r2 = (v) => Math.round((Number(v) || 0) * 100) / 100;
+  const dig = (s) => String(s || '').replace(/\D/g, '');
+  const hoje = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+  const dBR = (iso) => iso ? iso.split('-').reverse().join('/') : '—';
+  const dias = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5);
+  const addDias = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const addMeses = (iso, k) => { const [y, m, d] = iso.split('-').map(Number); const a = new Date(Date.UTC(y, m - 1 + k, 1)); const ult = new Date(Date.UTC(a.getUTCFullYear(), a.getUTCMonth() + 1, 0)).getUTCDate(); a.setUTCDate(Math.min(d, ult)); return a.toISOString().slice(0, 10); };
+  const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const toast = (m) => { const t = el('div', 'toast', m); document.body.append(t); setTimeout(() => t.remove(), 2600); };
+  const banner = (m) => { $('banner').textContent = m; $('banner').hidden = !m; };
+
+  const LIM = { juros: 1, multa: 2, mora: 1 };
+  let cfg = { juros: 1, multa: 2, mora: 1, meta: 10000, meta_fim: '', antes: 2,
+    msg: 'Olá, {nome}! Passando para lembrar da parcela {parcela} do seu empréstimo, no valor de {valor}, com vencimento em {vencimento}. Qualquer dúvida estou à disposição.',
+    msg_antes: 'Olá, {nome}! Tudo bem? Só lembrando que a parcela {parcela}, de {valor}, vence em {vencimento}.' };
+  let clientes = [], contratos = [], cols = null, aba = 'geral';
+
+  /* ---------- Contas ---------- */
+  const PER = { mensal: { passo: (iso, k) => addMeses(iso, k), fator: 1 }, quinzenal: { passo: (iso, k) => addDias(iso, 15 * k), fator: 0.5 }, semanal: { passo: (iso, k) => addDias(iso, 7 * k), fator: 7 / 30 } };
+  function gerarParcelas(valor, jurosMes, n, primeiro, per) {
+    const jm = Math.min(Math.max(Number(jurosMes) || 0, 0), LIM.juros) / 100;
+    const P = PER[per] || PER.mensal;
+    const i = jm > 0 ? Math.pow(1 + jm, P.fator) - 1 : 0;
+    const pmt = i > 0 ? valor * i / (1 - Math.pow(1 + i, -n)) : valor / n;
+    const base = Math.floor(pmt * 100) / 100; const total = r2(pmt * n);
+    return Array.from({ length: n }, (_, k) => ({ n: k + 1, venc: P.passo(primeiro, k), valor: k === n - 1 ? r2(total - base * (n - 1)) : base, pago: 0, pagamentos: [] }));
+  }
+  const pagoParc = (p) => r2(p.pago || 0);
+  const faltaParc = (p) => Math.max(0, r2((Number(p.valor) || 0) - pagoParc(p)));
+  function encargos(p) { // multa e juros de atraso em parcela vencida e não paga
+    const falta = faltaParc(p); const h = hoje();
+    if (falta <= 0 || p.venc >= h) return { multa: 0, mora: 0, dias: 0 };
+    const d = dias(p.venc, h);
+    return { multa: r2(falta * Math.min(cfg.multa, LIM.multa) / 100), mora: r2(falta * Math.min(cfg.mora, LIM.mora) / 100 / 30 * d), dias: d };
+  }
+  const totalContrato = (c) => r2((c.parcelas || []).reduce((a, p) => a + (Number(p.valor) || 0), 0));
+  const pagoContrato = (c) => r2((c.parcelas || []).reduce((a, p) => a + pagoParc(p), 0));
+  const recebidoContrato = (c) => r2((c.parcelas || []).reduce((a, p) => a + (p.pagamentos || []).reduce((s, x) => s + (Number(x.valor) || 0), 0), 0));
+  const faltaContrato = (c) => r2((c.parcelas || []).reduce((a, p) => a + faltaParc(p), 0));
+  const atrasoContrato = (c) => (c.parcelas || []).filter((p) => faltaParc(p) > 0 && p.venc < hoje());
+  const proxVenc = (c) => (c.parcelas || []).find((p) => faltaParc(p) > 0);
+  const statusContrato = (c) => c.status === 'cancelado' ? 'cancelado' : faltaContrato(c) <= 0 ? 'quitado' : atrasoContrato(c).length ? 'atraso' : 'ativo';
+  const ativos = () => contratos.filter((c) => c.status !== 'cancelado');
+  const cliPor = (id) => clientes.find((c) => c.id === id);
+  const nomeCli = (id) => cliPor(id)?.nome || 'Cliente removido';
+
+  /* ---------- Abas ---------- */
+  const ABAS = ['geral', 'cobrancas', 'contratos', 'clientes', 'config'];
+  function irPara(t) {
+    aba = t;
+    document.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+    document.querySelectorAll('.view').forEach((v) => { v.hidden = v.id !== 'v-' + t; });
+    if (location.hash.slice(1) !== t) history.replaceState(null, '', '#' + t);
+    render();
+  }
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => irPara(b.dataset.tab)));
+
+  /* ---------- Render ---------- */
+  function render() {
+    const h = hoje();
+    const abertas = [];
+    ativos().forEach((c) => (c.parcelas || []).forEach((p, idx) => { if (faltaParc(p) > 0) abertas.push({ c, p, idx }); }));
+    const atrasadas = abertas.filter((x) => x.p.venc < h);
+    $('n-cob').textContent = atrasadas.length || abertas.filter((x) => x.p.venc === h).length;
+    $('n-cob').classList.toggle('bad', atrasadas.length > 0);
+    $('n-con').textContent = ativos().filter((c) => statusContrato(c) !== 'quitado').length;
+    $('n-cli').textContent = clientes.length;
+    if (aba === 'geral') renderGeral(abertas, atrasadas);
+    if (aba === 'cobrancas') renderCob();
+    if (aba === 'contratos') renderCon();
+    if (aba === 'clientes') renderCli();
+    if (aba === 'config') renderCfg();
+  }
+
+  function renderGeral(abertas, atrasadas) {
+    const at = ativos();
+    const receber = r2(abertas.reduce((a, x) => a + faltaParc(x.p), 0));
+    const recebido = r2(at.reduce((a, c) => a + recebidoContrato(c), 0));
+    const rua = r2(at.reduce((a, c) => a + Math.max(0, (Number(c.valor) || 0) - pagoContrato(c)), 0));
+    const lucroReal = r2(at.reduce((a, c) => a + Math.max(0, recebidoContrato(c) - (Number(c.valor) || 0)), 0));
+    const lucroPrev = r2(at.reduce((a, c) => a + Math.max(0, totalContrato(c) - (Number(c.valor) || 0)), 0));
+    const atraso = r2(atrasadas.reduce((a, x) => a + faltaParc(x.p), 0));
+    $('k-receber').textContent = brl0(receber); $('k-receber-s').textContent = `${abertas.length} parcela(s) em aberto`;
+    $('k-rua').textContent = brl0(rua);
+    $('k-recebido').textContent = brl0(recebido);
+    $('k-lucro').textContent = brl0(lucroReal); $('k-lucro-s').textContent = `Previsto no total: ${brl0(lucroPrev)}`;
+    $('k-atraso').textContent = brl0(atraso); $('k-atraso-s').textContent = `${atrasadas.length} parcela(s) · ${receber ? Math.round(atraso / receber * 100) : 0}% do a receber`;
+    // meta
+    const meta = Number(cfg.meta) || 0; const pct = meta ? Math.min(100, lucroReal / meta * 100) : 0;
+    $('meta-bar').style.width = pct + '%'; $('meta-v').textContent = `${brl0(lucroReal)} de ${brl0(meta)}`; $('meta-p').textContent = Math.round(pct) + '%';
+    $('meta-sub').textContent = meta ? `Lucro com juros já recebido${cfg.meta_fim ? ', até ' + dBR(cfg.meta_fim) : ''}.` : 'Defina em Configurações.';
+    // próximos 7 dias
+    const h = hoje(), lim = addDias(h, 7);
+    const prox = abertas.filter((x) => x.p.venc >= h && x.p.venc <= lim).sort((a, b) => a.p.venc.localeCompare(b.p.venc));
+    $('prox-sub').textContent = prox.length ? `${prox.length} parcela(s), ${brl(prox.reduce((a, x) => a + faltaParc(x.p), 0))}` : 'Nada vencendo nesta semana.';
+    $('prox').replaceChildren(...prox.slice(0, 8).map((x) => { const d = el('div'); d.append(el('span', null, `${dBR(x.p.venc).slice(0, 5)} · ${nomeCli(x.c.cliente_id)}`), el('b', 'num', brl(faltaParc(x.p)))); return d; }));
+    // devedores
+    const porCli = {}; abertas.forEach((x) => { porCli[x.c.cliente_id] = (porCli[x.c.cliente_id] || 0) + faltaParc(x.p); });
+    const top = Object.entries(porCli).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    $('top-dev').replaceChildren(...(top.length ? top.map(([id, v]) => { const d = el('div'); d.append(el('span', null, nomeCli(id)), el('b', 'num', brl(v))); return d; }) : [el('p', 'fine', 'Ninguém devendo ainda.')]));
+    grafico();
+  }
+
+  function grafico() {
+    const h = hoje(); const [y, m] = h.split('-').map(Number);
+    const meses = []; for (let k = -5; k <= 6; k++) { const d = new Date(Date.UTC(y, m - 1 + k, 1)); meses.push(d.toISOString().slice(0, 7)); }
+    const rec = {}, prev = {}, atr = {};
+    ativos().forEach((c) => (c.parcelas || []).forEach((p) => {
+      (p.pagamentos || []).forEach((pg) => { const k = (pg.data || '').slice(0, 7); rec[k] = (rec[k] || 0) + (Number(pg.valor) || 0); });
+      const f = faltaParc(p); if (f > 0) { const k = p.venc.slice(0, 7); if (p.venc < h) atr[k] = (atr[k] || 0) + f; else prev[k] = (prev[k] || 0) + f; }
+    }));
+    const W = 720, H = 240, pl = 54, pb = 26, pt = 10; const bw = (W - pl - 10) / meses.length;
+    const maxV = Math.max(100, ...meses.map((k) => Math.max((rec[k] || 0) + (atr[k] || 0), prev[k] || 0)));
+    const sy = (v) => pt + (H - pt - pb) * (1 - v / maxV);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Recebimentos por mês">`;
+    for (let t = 0; t <= 4; t++) { const v = maxV * t / 4; const yy = sy(v); svg += `<line x1="${pl}" x2="${W - 10}" y1="${yy}" y2="${yy}" stroke="rgba(255,255,255,.08)"/><text x="${pl - 6}" y="${yy + 4}" text-anchor="end">${v >= 1000 ? Math.round(v / 1000) + 'k' : Math.round(v)}</text>`; }
+    meses.forEach((k, i) => {
+      const x = pl + i * bw + bw * 0.18, w = bw * 0.64; let base = H - pb;
+      const r = rec[k] || 0, a = atr[k] || 0, p = prev[k] || 0;
+      if (r) { const yy = sy(r); svg += `<rect x="${x}" y="${yy}" width="${w}" height="${base - yy}" rx="4" fill="#4fd18b"><title>${k}: recebido ${brl(r)}</title></rect>`; base = yy; }
+      if (a) { const yy = sy(r + a); svg += `<rect x="${x}" y="${yy}" width="${w}" height="${base - yy}" rx="4" fill="#ff5f57" opacity=".5"><title>${k}: atrasado ${brl(a)}</title></rect>`; }
+      if (p) { const yy = sy(p); svg += `<rect x="${x + w * 0.15}" y="${yy}" width="${w * 0.7}" height="${H - pb - yy}" rx="4" fill="#ff3b3b" opacity=".85"><title>${k}: previsto ${brl(p)}</title></rect>`; }
+      const [yy4, mm] = k.split('-'); svg += `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle" ${k === h.slice(0, 7) ? 'style="fill:#fff;font-weight:700"' : ''}>${MES[Number(mm) - 1]}${mm === '01' ? '/' + yy4.slice(2) : ''}</text>`;
+    });
+    $('g-meses').innerHTML = svg + '</svg>';
+  }
+
+  function msgWa(c, p, antes) {
+    const cli = cliPor(c.cliente_id) || {}; const e = encargos(p);
+    const v = faltaParc(p) + e.multa + e.mora;
+    const t = (antes ? cfg.msg_antes : cfg.msg).replace(/\{nome\}/g, (cli.nome || '').split(' ')[0]).replace(/\{valor\}/g, brl(v)).replace(/\{vencimento\}/g, dBR(p.venc)).replace(/\{parcela\}/g, `${p.n}/${c.parcelas.length}`);
+    let tel = dig(cli.telefone); if (tel.length <= 11) tel = '55' + tel;
+    return `https://wa.me/${tel}?text=${encodeURIComponent(t)}`;
+  }
+
+  function renderCob() {
+    const q = $('c-busca').value.trim().toLowerCase(), f = $('c-filtro').value, h = hoje();
+    const itens = [];
+    ativos().forEach((c) => (c.parcelas || []).forEach((p, idx) => {
+      const falta = faltaParc(p); const nome = nomeCli(c.cliente_id);
+      if (q && !nome.toLowerCase().includes(q)) return;
+      if (f === 'pagas') { if (falta <= 0) itens.push({ c, p, idx }); return; }
+      if (falta <= 0) return;
+      if (f === 'atraso' && !(p.venc < h)) return;
+      if (f === 'hoje' && p.venc !== h) return;
+      if ((f === '7' || f === '30') && !(p.venc >= h && p.venc <= addDias(h, Number(f)))) return;
+      itens.push({ c, p, idx });
+    }));
+    itens.sort((a, b) => f === 'pagas' ? b.p.venc.localeCompare(a.p.venc) : a.p.venc.localeCompare(b.p.venc));
+    if (!itens.length) { $('l-cob').replaceChildren(el('div', 'card vazio', f === 'pagas' ? 'Nenhuma parcela paga ainda.' : 'Nenhuma cobrança neste filtro. 👏')); return; }
+    $('l-cob').replaceChildren(...itens.slice(0, 300).map(({ c, p, idx }) => {
+      const falta = faltaParc(p), e = encargos(p), atras = falta > 0 && p.venc < h, eHoje = p.venc === h;
+      const box = el('div', 'cob' + (atras ? ' atraso' : eHoje ? ' hoje' : ''));
+      const dia = el('div', 'dia'); const [, mm, dd] = p.venc.split('-'); dia.append(el('b', null, dd), el('small', null, MES[Number(mm) - 1]));
+      const info = el('div', 'info'); info.append(el('b', null, nomeCli(c.cliente_id)));
+      let st = falta <= 0 ? `Paga em ${dBR((p.pagamentos || []).slice(-1)[0]?.data)}` : atras ? `Atrasada há ${e.dias} dia(s) · multa ${brl(e.multa)} + juros ${brl(e.mora)}` : eHoje ? 'Vence hoje' : `Vence em ${dias(h, p.venc)} dia(s)`;
+      info.append(el('span', null, `Parcela ${p.n}/${c.parcelas.length} · ${st}${pagoParc(p) > 0 && falta > 0 ? ` · já pagou ${brl(pagoParc(p))}` : ''}`));
+      const val = el('div', 'val'); val.append(el('strong', null, brl(falta > 0 ? falta + e.multa + e.mora : p.valor)));
+      const bts = el('div', 'bts');
+      if (falta > 0) {
+        const wa = el('a', 'btn sm', atras || eHoje ? 'Cobrar' : 'Lembrar'); wa.href = msgWa(c, p, !(atras || eHoje)); wa.target = '_blank'; wa.rel = 'noopener';
+        const pg = el('button', 'btn sm ok', 'Recebi'); pg.type = 'button'; pg.onclick = () => abrirPag(c, idx);
+        bts.append(wa, pg);
+      } else { const pg = el('button', 'btn sm', 'Ver'); pg.type = 'button'; pg.onclick = () => abrirPag(c, idx); bts.append(pg); }
+      const ver = el('button', 'btn sm', 'Contrato'); ver.type = 'button'; ver.onclick = () => abrirCon(c); bts.append(ver);
+      val.append(bts); box.append(dia, info, val); return box;
+    }));
+  }
+
+  const PILL = { ativo: ['Em dia', 'p-ok'], atraso: ['Atrasado', 'p-bad'], quitado: ['Quitado', 'p-info'], cancelado: ['Cancelado', 'p-mut'] };
+  function renderCon() {
+    const q = $('e-busca').value.trim().toLowerCase(), f = $('e-filtro').value;
+    const lista = contratos.filter((c) => { const s = statusContrato(c); if (f === 'ativo' && !(s === 'ativo' || s === 'atraso')) return false; if (f && f !== 'ativo' && s !== f) return false; return !q || (nomeCli(c.cliente_id) + ' ' + (c.obs || '')).toLowerCase().includes(q); })
+      .sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+    $('con-vazio').hidden = lista.length > 0;
+    $('t-con').replaceChildren(...lista.map((c) => {
+      const tr = el('tr', 'click'); tr.onclick = () => abrirCon(c);
+      const s = statusContrato(c), pv = proxVenc(c);
+      const st = el('td'); st.append(el('span', 'pill ' + PILL[s][1], PILL[s][0]));
+      tr.append(el('td', null, nomeCli(c.cliente_id)), el('td', 'num', dBR(c.data)), el('td', 'r', brl(c.valor)), el('td', 'r', `${(c.parcelas || []).filter((p) => faltaParc(p) <= 0).length}/${(c.parcelas || []).length}`), el('td', 'r', brl(totalContrato(c))), el('td', 'r', brl(pagoContrato(c))), el('td', 'r', brl(faltaContrato(c))), el('td', 'num', pv ? dBR(pv.venc) : '—'), st);
+      return tr;
+    }));
+  }
+
+  function renderCli() {
+    const q = $('cl-busca').value.trim().toLowerCase();
+    const lista = clientes.filter((c) => !q || [c.nome, c.cpf, c.telefone].join(' ').toLowerCase().includes(q)).sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+    $('cli-vazio').hidden = lista.length > 0;
+    $('t-cli').replaceChildren(...lista.map((cl) => {
+      const cs = ativos().filter((c) => c.cliente_id === cl.id);
+      const aberto = r2(cs.reduce((a, c) => a + faltaContrato(c), 0));
+      const atr = r2(cs.reduce((a, c) => a + atrasoContrato(c).reduce((s, p) => s + faltaParc(p), 0), 0));
+      const tr = el('tr', 'click'); tr.onclick = () => abrirCli(cl);
+      const st = el('td'); st.append(atr > 0 ? el('span', 'pill p-bad', 'Em atraso') : aberto > 0 ? el('span', 'pill p-ok', 'Em dia') : el('span', 'pill p-mut', 'Sem dívida'));
+      tr.append(el('td', null, cl.nome || '—'), el('td', 'num', cl.telefone || '—'), el('td', 'num', cl.cpf || '—'), el('td', 'r', String(cs.length)), el('td', 'r', brl(aberto)), el('td', 'r', brl(atr)), st);
+      return tr;
+    }));
+  }
+
+  function renderCfg() {
+    $('cf-juros').value = cfg.juros; $('cf-multa').value = cfg.multa; $('cf-mora').value = cfg.mora; $('cf-meta').value = cfg.meta || ''; $('cf-meta-fim').value = cfg.meta_fim || ''; $('cf-antes').value = cfg.antes; $('cf-msg').value = cfg.msg; $('cf-msg-antes').value = cfg.msg_antes;
+  }
+  $('cf-salvar').addEventListener('click', async () => {
+    const lim = (v, a, b) => Math.min(b, Math.max(a, Number(v) || 0));
+    cfg = { ...cfg, juros: lim($('cf-juros').value, 0, LIM.juros), multa: lim($('cf-multa').value, 0, LIM.multa), mora: lim($('cf-mora').value, 0, LIM.mora), meta: lim($('cf-meta').value, 0, 1e9), meta_fim: $('cf-meta-fim').value, antes: Math.round(lim($('cf-antes').value, 0, 15)), msg: $('cf-msg').value.trim() || cfg.msg, msg_antes: $('cf-msg-antes').value.trim() || cfg.msg_antes };
+    try { await cols.cfg.doc('geral').set(cfg); toast('Configurações salvas'); renderCfg(); } catch (e) { toast(e.message || 'Não foi possível salvar'); }
+  });
+  ['c-busca', 'c-filtro', 'e-busca', 'e-filtro', 'cl-busca'].forEach((id) => $(id).addEventListener(id.includes('busca') ? 'input' : 'change', render));
+
+  /* ---------- Modais ---------- */
+  const abrir = (id) => { $(id).hidden = false; document.body.style.overflow = 'hidden'; };
+  const fechar = (id) => { $(id).hidden = true; document.body.style.overflow = ''; };
+  document.querySelectorAll('.modal-bg').forEach((m) => { m.addEventListener('click', (e) => { if (e.target === m) fechar(m.id); }); m.querySelector('[data-fechar]').addEventListener('click', () => fechar(m.id)); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.modal-bg:not([hidden])').forEach((m) => fechar(m.id)); });
+  const confirmar = (btn, txt, fn) => { btn.onclick = async () => { if (btn.dataset.ok !== '1') { btn.dataset.ok = '1'; btn.textContent = 'Clique de novo para confirmar'; setTimeout(() => { btn.dataset.ok = ''; btn.textContent = txt; }, 4000); return; } await fn(); }; };
+
+  // Cliente
+  let cliEd = null;
+  function abrirCli(cl) {
+    cliEd = cl || null; $('m-cli-t').textContent = cl ? cl.nome : 'Novo cliente'; $('cl-err').hidden = true;
+    $('cl-nome').value = cl?.nome || ''; $('cl-tel').value = cl?.telefone || ''; $('cl-cpf').value = cl?.cpf || ''; $('cl-end').value = cl?.endereco || '';
+    $('cl-en').value = cl?.emerg_nome || ''; $('cl-ep').value = cl?.emerg_parentesco || ''; $('cl-et').value = cl?.emerg_tel || ''; $('cl-obs').value = cl?.obs || '';
+    const hist = $('cl-hist'); hist.replaceChildren();
+    if (cl) {
+      const cs = contratos.filter((c) => c.cliente_id === cl.id);
+      if (cs.length) { hist.append(el('div', 'sect', 'Empréstimos deste cliente')); const r = el('div', 'rank'); cs.forEach((c) => { const d = el('div'); d.style.cursor = 'pointer'; d.onclick = () => { fechar('m-cli'); abrirCon(c); }; d.append(el('span', null, `${dBR(c.data)} · ${brl(c.valor)} · ${PILL[statusContrato(c)][0]}`), el('b', 'num', `falta ${brl(faltaContrato(c))}`)); r.append(d); }); hist.append(r); }
+      const nv = el('button', 'btn sm', '+ Novo empréstimo para este cliente'); nv.type = 'button'; nv.style.marginTop = '8px'; nv.onclick = () => { fechar('m-cli'); abrirCon(null, cl.id); }; hist.append(nv);
+    }
+    const db = $('cl-del-box'); db.replaceChildren();
+    if (cl) { const b = el('button', 'btn ghost-bad', 'Excluir cliente'); b.type = 'button'; confirmar(b, 'Excluir cliente', async () => { if (contratos.some((c) => c.cliente_id === cl.id && c.status !== 'cancelado' && faltaContrato(c) > 0)) { $('cl-err').textContent = 'Esse cliente tem empréstimo em aberto. Quite ou cancele antes de excluir.'; $('cl-err').hidden = false; return; } await cols.cli.doc(cl.id).delete(); fechar('m-cli'); toast('Cliente excluído'); }); db.append(b); }
+    abrir('m-cli'); setTimeout(() => $('cl-nome').focus(), 50);
+  }
+  $('f-cli').addEventListener('submit', async (e) => {
+    e.preventDefault(); const nome = $('cl-nome').value.trim();
+    if (nome.split(/\s+/).length < 2) { $('cl-err').textContent = 'Coloque o nome completo.'; $('cl-err').hidden = false; return; }
+    if (dig($('cl-tel').value).length < 10) { $('cl-err').textContent = 'Coloque o telefone com DDD.'; $('cl-err').hidden = false; return; }
+    const d = { nome, telefone: $('cl-tel').value.trim(), cpf: $('cl-cpf').value.trim(), endereco: $('cl-end').value.trim(), emerg_nome: $('cl-en').value.trim(), emerg_parentesco: $('cl-ep').value.trim(), emerg_tel: $('cl-et').value.trim(), obs: $('cl-obs').value.trim(), atualizado: new Date().toISOString() };
+    try { if (cliEd) await cols.cli.doc(cliEd.id).set({ ...cliEd, ...d, id: undefined }); else { const r = await cols.cli.add({ ...d, criado: d.atualizado }); cliNovo = r.id; } fechar('m-cli'); toast('Cliente salvo'); if (voltarCon) { voltarCon = false; abrirCon(null, cliNovo); } }
+    catch (x) { $('cl-err').textContent = x.message || 'Não foi possível salvar.'; $('cl-err').hidden = false; }
+  });
+  let cliNovo = null, voltarCon = false;
+
+  // Contrato
+  let conEd = null, parcRasc = [];
+  function abrirCon(c, cliId) {
+    if (!c && !clientes.length) { voltarCon = true; abrirCli(null); toast('Cadastre o cliente primeiro'); return; }
+    conEd = c || null; $('co-err').hidden = true; $('m-con-t').textContent = c ? `Empréstimo de ${nomeCli(c.cliente_id)}` : 'Novo empréstimo';
+    $('co-cli').replaceChildren(...clientes.slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || '')).map((cl) => new Option(cl.nome, cl.id)));
+    $('co-cli').value = c?.cliente_id || cliId || clientes[0]?.id || '';
+    $('co-valor').value = c?.valor || ''; $('co-data').value = c?.data || hoje(); $('co-juros').value = c?.juros_mes ?? cfg.juros; $('co-n').value = c?.parcelas?.length || 4;
+    $('co-per').value = c?.periodo || 'mensal'; $('co-venc').value = c?.parcelas?.[0]?.venc || addMeses(hoje(), 1); $('co-obs').value = c?.obs || '';
+    parcRasc = c ? JSON.parse(JSON.stringify(c.parcelas || [])) : [];
+    const bloq = c && (c.parcelas || []).some((p) => pagoParc(p) > 0);
+    ['co-valor', 'co-juros', 'co-n', 'co-per', 'co-venc', 'co-data'].forEach((id) => { $(id).disabled = !!bloq; });
+    $('co-regerar').hidden = !c || bloq;
+    const db = $('co-del-box'); db.replaceChildren();
+    if (c) {
+      if (c.status !== 'cancelado') { const b = el('button', 'btn ghost-bad', 'Cancelar empréstimo'); b.type = 'button'; confirmar(b, 'Cancelar empréstimo', async () => { await cols.con.doc(c.id).update({ status: 'cancelado' }); fechar('m-con'); toast('Empréstimo cancelado'); }); db.append(b); }
+      else { const b = el('button', 'btn ghost-bad', 'Excluir de vez'); b.type = 'button'; confirmar(b, 'Excluir de vez', async () => { await cols.con.doc(c.id).delete(); fechar('m-con'); toast('Empréstimo excluído'); }); const r = el('button', 'btn', 'Reativar'); r.type = 'button'; r.style.marginLeft = '8px'; r.onclick = async () => { await cols.con.doc(c.id).update({ status: 'ativo' }); fechar('m-con'); toast('Empréstimo reativado'); }; db.append(b, r); }
+    }
+    desenharCon(); abrir('m-con');
+  }
+  function lerForm() { return { valor: Number($('co-valor').value) || 0, juros: Math.min(LIM.juros, Math.max(0, Number($('co-juros').value) || 0)), n: Math.round(Number($('co-n').value) || 0), per: $('co-per').value, venc: $('co-venc').value }; }
+  function desenharCon() {
+    const f = lerForm();
+    if (!conEd || !parcRasc.length) parcRasc = f.valor > 0 && f.n >= 1 && f.n <= 60 && f.venc ? gerarParcelas(f.valor, f.juros, f.n, f.venc, f.per) : [];
+    const total = r2(parcRasc.reduce((a, p) => a + (Number(p.valor) || 0), 0)), pago = r2(parcRasc.reduce((a, p) => a + pagoParc(p), 0));
+    const res = $('co-resumo'); res.replaceChildren();
+    const add = (l, v) => { const d = el('div'); d.append(el('small', null, l), el('b', null, v)); res.append(d); };
+    add('Emprestado', brl(f.valor)); add('Parcela', parcRasc[0] ? brl(parcRasc[0].valor) : '—'); add('Total a receber', brl(total)); add('Lucro (juros)', brl(Math.max(0, total - f.valor)));
+    if (conEd) { add('Já pago', brl(pago)); add('Falta', brl(Math.max(0, total - pago))); }
+    const box = $('co-parc'); box.replaceChildren();
+    if (!parcRasc.length) return;
+    box.append(el('div', 'sect', 'Parcelas'));
+    const tb = el('div', 'tbox'); const t = el('table'); t.innerHTML = '<thead><tr><th>#</th><th>Vencimento</th><th class="r">Valor</th><th class="r">Pago</th><th>Situação</th><th></th></tr></thead>';
+    const body = el('tbody');
+    parcRasc.forEach((p, i) => {
+      const tr = el('tr'); const falta = faltaParc(p), h = hoje();
+      const dv = el('input'); dv.type = 'date'; dv.value = p.venc; dv.style.width = '150px'; dv.onchange = () => { p.venc = dv.value; };
+      const tdD = el('td'); tdD.append(dv);
+      const st = el('td'); st.append(falta <= 0 ? el('span', 'pill p-info', 'Paga') : p.venc < h ? el('span', 'pill p-bad', 'Atrasada') : p.venc === h ? el('span', 'pill p-warn', 'Hoje') : el('span', 'pill p-ok', 'Em aberto'));
+      const ac = el('td'); if (conEd) { const b = el('button', 'btn sm ' + (falta > 0 ? 'ok' : ''), falta > 0 ? 'Recebi' : 'Ver'); b.type = 'button'; b.onclick = () => abrirPag(conEd, i); ac.append(b); }
+      tr.append(el('td', 'num', String(p.n)), tdD, el('td', 'r', brl(p.valor)), el('td', 'r', brl(pagoParc(p))), st, ac); body.append(tr);
+    });
+    t.append(body); tb.append(t); box.append(tb);
+  }
+  ['co-valor', 'co-juros', 'co-n', 'co-per', 'co-venc'].forEach((id) => $(id).addEventListener('input', () => { if (!conEd) desenharCon(); }));
+  $('co-regerar').addEventListener('click', () => { const f = lerForm(); parcRasc = gerarParcelas(f.valor, f.juros, f.n, f.venc, f.per); desenharCon(); toast('Parcelas recalculadas. Salve para confirmar.'); });
+  $('f-con').addEventListener('submit', async (e) => {
+    e.preventDefault(); const f = lerForm(); const err = (m) => { $('co-err').textContent = m; $('co-err').hidden = false; };
+    if (!$('co-cli').value) return err('Escolha o cliente.');
+    if (!(f.valor > 0)) return err('Coloque o valor emprestado.');
+    if (!(f.n >= 1 && f.n <= 60)) return err('Parcelas: de 1 a 60.');
+    if (!f.venc) return err('Escolha o 1º vencimento.');
+    if (Number($('co-juros').value) > LIM.juros) return err('O juro máximo permitido é de 1% ao mês.');
+    if (!parcRasc.length) desenharCon();
+    parcRasc.sort((a, b) => a.venc.localeCompare(b.venc)).forEach((p, i) => { p.n = i + 1; });
+    const d = { cliente_id: $('co-cli').value, valor: r2(f.valor), data: $('co-data').value || hoje(), juros_mes: f.juros, periodo: f.per, parcelas: parcRasc, obs: $('co-obs').value.trim(), status: conEd?.status === 'cancelado' ? 'cancelado' : 'ativo', atualizado: new Date().toISOString() };
+    try { if (conEd) await cols.con.doc(conEd.id).set({ ...conEd, ...d, id: undefined }); else await cols.con.add({ ...d, criado: d.atualizado }); fechar('m-con'); toast('Empréstimo salvo'); if (aba !== 'contratos' && !conEd) irPara('contratos'); }
+    catch (x) { err(x.message || 'Não foi possível salvar.'); }
+  });
+
+  // Pagamento
+  let pagCtx = null;
+  function abrirPag(c, idx) {
+    const atual = contratos.find((x) => x.id === c.id) || c; const p = atual.parcelas[idx]; pagCtx = { c: atual, idx };
+    const e = encargos(p), falta = faltaParc(p);
+    $('pg-info').textContent = `${nomeCli(atual.cliente_id)} · parcela ${p.n}/${atual.parcelas.length} · vence ${dBR(p.venc)}`;
+    const res = $('pg-resumo'); res.replaceChildren();
+    const add = (l, v) => { const d = el('div'); d.append(el('small', null, l), el('b', null, v)); res.append(d); };
+    add('Parcela', brl(p.valor)); add('Já pago', brl(pagoParc(p))); add('Falta', brl(falta));
+    if (e.dias) { add(`Multa (${cfg.multa}%)`, brl(e.multa)); add(`Juros ${e.dias}d`, brl(e.mora)); add('Total hoje', brl(falta + e.multa + e.mora)); }
+    $('pg-valor').value = falta > 0 ? r2(falta + e.multa + e.mora) : ''; $('pg-data').value = hoje(); $('pg-err').hidden = true;
+    $('pg-desfazer').hidden = !(p.pagamentos || []).length;
+    abrir('m-pag'); setTimeout(() => $('pg-valor').select(), 50);
+  }
+  $('f-pag').addEventListener('submit', async (e) => {
+    e.preventDefault(); const { c, idx } = pagCtx; const v = r2($('pg-valor').value), data = $('pg-data').value || hoje();
+    if (!(v > 0)) { $('pg-err').textContent = 'Coloque o valor recebido.'; $('pg-err').hidden = false; return; }
+    const parcelas = JSON.parse(JSON.stringify(c.parcelas)); let resto = v;
+    // O valor vai primeiro para a parcela escolhida; o que sobrar adianta as próximas.
+    const ordem = [idx, ...parcelas.map((_, i) => i).filter((i) => i !== idx)];
+    for (const i of ordem) { if (resto <= 0) break; const p = parcelas[i]; const enc = i === idx ? encargos(p) : { multa: 0, mora: 0 }; const falta = faltaParc(p); if (falta <= 0 && i !== idx) continue; const extra = i === idx ? Math.min(resto, enc.multa + enc.mora) : 0; const ab = Math.min(resto - extra, falta); if (ab <= 0 && !extra) continue; p.pago = r2(pagoParc(p) + ab); p.pagamentos = [...(p.pagamentos || []), { valor: r2(ab + extra), data, encargos: r2(extra) }]; resto = r2(resto - ab - extra); }
+    try { await cols.con.doc(c.id).update({ parcelas, atualizado: new Date().toISOString() }); fechar('m-pag'); toast(resto > 0 ? `Recebido. Sobrou ${brl(resto)} (contrato já quitado).` : 'Pagamento registrado'); if (!$('m-con').hidden) { const n = contratos.find((x) => x.id === c.id); if (n) abrirCon(n); } }
+    catch (x) { $('pg-err').textContent = x.message || 'Não foi possível salvar.'; $('pg-err').hidden = false; }
+  });
+  $('pg-desfazer').addEventListener('click', async () => {
+    const { c, idx } = pagCtx; const parcelas = JSON.parse(JSON.stringify(c.parcelas)); parcelas[idx].pago = 0; parcelas[idx].pagamentos = [];
+    try { await cols.con.doc(c.id).update({ parcelas }); fechar('m-pag'); toast('Pagamentos desfeitos'); } catch (x) { toast(x.message); }
+  });
+
+  $('b-cliente').addEventListener('click', () => abrirCli(null));
+  $('b-contrato').addEventListener('click', () => abrirCon(null));
+  document.querySelectorAll('[data-novo]').forEach((b) => b.addEventListener('click', () => b.dataset.novo === 'cliente' ? abrirCli(null) : abrirCon(null)));
+
+  /* ---------- Dados ---------- */
+  const inicio = location.hash.slice(1); irPara(ABAS.includes(inicio) ? inicio : 'geral');
+  (async () => {
+    const db = await window.claude?.use?.('db');
+    if (!db) { banner('Entre com a senha para ver seus dados.'); return; }
+    cols = { cli: db.collection('emp_clientes'), con: db.collection('emp_contratos'), cfg: db.collection('emp_config') };
+    cols.cli.onSnapshot((s) => { clientes = s.docs.map((d) => ({ id: d.id, ...d.data() })); render(); });
+    cols.con.onSnapshot((s) => { contratos = s.docs.map((d) => ({ id: d.id, ...d.data() })); render(); if (!$('m-con').hidden && conEd) { const n = contratos.find((x) => x.id === conEd.id); if (n && JSON.stringify(n.parcelas) !== JSON.stringify(conEd.parcelas)) { conEd = n; parcRasc = JSON.parse(JSON.stringify(n.parcelas)); desenharCon(); } } });
+    cols.cfg.doc('geral').onSnapshot((s) => { const d = s.data?.(); if (d) cfg = { ...cfg, ...d, juros: Math.min(Number(d.juros ?? cfg.juros), LIM.juros), multa: Math.min(Number(d.multa ?? cfg.multa), LIM.multa), mora: Math.min(Number(d.mora ?? cfg.mora), LIM.mora) }; render(); });
+  })();
+})();
+</script>
+</body>
+</html>

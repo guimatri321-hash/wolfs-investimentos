@@ -36,7 +36,7 @@
     const box = document.createElement("div");
     box.className = "wl-login"; box.hidden = true;
     box.innerHTML = `<form class="wl-card" novalidate>
-      <div class="wl-top"><img src="fotos/logo.jpg" alt=""><div><h2>Painel Wolfs</h2><p>Área só do administrador</p></div></div>
+      <div class="wl-top"><img src="/fotos/logo.jpg" alt=""><div><h2>Painel Wolfs</h2><p>Área só do administrador</p></div></div>
       <label>Senha<input type="password" autocomplete="current-password"></label>
       <p class="wl-err" hidden></p>
       <button type="submit">Entrar</button>
@@ -65,6 +65,7 @@
 
   /* ---------- Banco de dados ---------- */
   const dados = { estoque: new Map(), clientes: new Map(), vendas: new Map(), mercado: new Map(), config: new Map() };
+  const mapa = (c) => dados[c] || (dados[c] = new Map());
   const ouvintesCol = {}, ouvintesDoc = {};
   const avisar = (col) => {
     const docs = [...dados[col].entries()].map(([id, d]) => ({ id, data: () => d }));
@@ -77,7 +78,7 @@
     try {
       const r = await chamar("admin/docs");
       Object.values(dados).forEach((m) => m.clear());
-      for (const d of r.docs || []) if (dados[d.colecao]) dados[d.colecao].set(d.id, d.dados || {});
+      for (const d of r.docs || []) mapa(d.colecao).set(d.id, d.dados || {});
       carregado = true;
       Object.keys(dados).forEach(avisar);
     } catch { /* tela de entrada ou rede: tenta de novo no próximo ciclo */ }
@@ -97,7 +98,7 @@
     };
   }
   function colRef(col) {
-    if (!dados[col]) throw new TypeError("Coleção desconhecida: " + col);
+    mapa(col);
     return {
       path: col,
       doc(id) { return docRef(col, id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 10))); },
