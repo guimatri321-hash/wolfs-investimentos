@@ -328,7 +328,13 @@
       const cp = el('button', 'btn sm', 'Copiar para o painel'); cp.type = 'button'; cp.onclick = () => copiar(codigoPainel(p), 'Copiado. Cole no painel em "Colar pedido do site".');
       const obs = el('input'); obs.type = 'text'; obs.placeholder = 'Anotação interna'; obs.value = p.obsAdmin || ''; obs.style.flex = '1 1 200px'; obs.style.width = 'auto'; obs.setAttribute('aria-label', 'Anotação');
       obs.onchange = async () => { try { Object.assign(p, await api('admin/pedidos/' + p.id, { method: 'PUT', body: JSON.stringify({ obsAdmin: obs.value }) })); toast('Anotação salva'); } catch (e) { toast(e.message); } };
-      acts.append(sel, wa, cp, obs);
+      const mudar = async (st) => { try { Object.assign(p, await api('admin/pedidos/' + p.id, { method: 'PUT', body: JSON.stringify({ status: st }) })); toast('Pedido ' + STATUS[st].toLowerCase()); desenharPedidos(); } catch (e) { toast(e.message); } };
+      const bt = (txt, st, cls) => { const b = el('button', 'btn sm ' + cls, txt); b.type = 'button'; b.onclick = () => mudar(st); return b; };
+      const rapidos = [];
+      if (['novo', 'em_analise'].includes(p.status)) rapidos.push(bt('✓ Aprovar', 'aprovado', 'ok'), bt('✕ Recusar', 'recusado', 'danger'));
+      if (p.status === 'aprovado') rapidos.push(bt('✓ Concluir (entregue)', 'concluido', 'ok'));
+      if (!['cancelado', 'recusado', 'concluido'].includes(p.status)) rapidos.push(bt('Cancelar pedido', 'cancelado', 'danger'));
+      acts.append(...rapidos, sel, wa, cp, obs);
       box.append(top, info, acts); return box;
     }));
     $('vazio-ped').hidden = lista.length > 0;

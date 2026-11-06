@@ -55,7 +55,8 @@ input[type=range] { width: 100%; accent-color: var(--red); }
 .cta { border: 0; border-radius: 12px; padding: 13px 16px; font-weight: 700; font-size: .95rem; background: linear-gradient(180deg, #ff4b4b, #d61f1f); color: #fff; box-shadow: 0 10px 26px -12px rgba(255,59,59,.8); }
 .btn { border: 1px solid var(--line); background: var(--panel2); border-radius: 10px; padding: 8px 14px; font-weight: 600; font-size: .85rem; }
 .btn.primary { background: var(--red); border-color: var(--red); color: #fff; }
-.btn.danger { color: var(--bad); }
+.btn.danger { color: var(--bad); border-color: rgba(255,107,99,.45); }
+.btn.ok { color: #fff; background: #1f9d55; border-color: #1f9d55; }
 .btn.sm { padding: 5px 10px; font-size: .78rem; border-radius: 8px; }
 .err { color: var(--bad); font-size: .84rem; margin: 0; }
 .wa { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 700; color: #fff; background: #1f9d55; border-radius: 12px; padding: 11px 16px; }
