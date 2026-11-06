@@ -676,6 +676,30 @@
       const h = location.hash.slice(1); if (h && $(h)) setTimeout(() => $(h).scrollIntoView(), 50);
     } catch { $('carregando').hidden = true; $('falha').hidden = false; }
   })();
+
+  /* ---------- Ao vivo: o que muda no estoque aparece sozinho na loja ---------- */
+  let assinatura = '';
+  async function atualizarAoVivo() {
+    if (document.visibilityState !== 'visible' || !CFG || !$('pm').hidden || !$('c2-form').hidden) return;
+    try {
+      const d = await api('loja'); const nova = JSON.stringify(d.produtos);
+      if (!assinatura) { assinatura = nova; return; }
+      if (nova === assinatura) return;
+      assinatura = nova; PRODUTOS = d.produtos;
+      const sel = $('c2-prod').value;
+      const opts = PRODUTOS.map((p) => new Option(`${p.nome} (${p.condicao}) · ${brl0(p.preco)}`, String(p.id)));
+      if (CFG.valorLivre) opts.push(new Option('Outro valor (digitar)', ''));
+      $('c2-prod').replaceChildren(...opts);
+      const ainda = PRODUTOS.find((p) => String(p.id) === sel);
+      if (ainda) { $('c2-prod').value = sel; c2.valor = ainda.preco; $('c2-valor').value = ainda.preco; }
+      else if (sel === '' && CFG.valorLivre) $('c2-prod').value = '';
+      else if (PRODUTOS[0]) { c2.prodId = String(PRODUTOS[0].id); c2.valor = PRODUTOS[0].preco; $('c2-prod').value = c2.prodId; $('c2-valor').value = c2.valor; }
+      desenharLoja(); drawC2();
+    } catch { /* tenta de novo no próximo ciclo */ }
+  }
+  setInterval(atualizarAoVivo, 30000);
+  setTimeout(atualizarAoVivo, 2000);
+  document.addEventListener('visibilitychange', atualizarAoVivo);
 })();
 </script>
 </body>
