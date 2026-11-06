@@ -1235,18 +1235,40 @@
   $('btn-pedido').addEventListener('click', () => { $('ped-txt').value = ''; mostrarPedido(); $('ped').hidden = false; listarPedidosSite(); });
   $('ped-fechar').addEventListener('click', () => { $('ped').hidden = true; });
   $('ped').addEventListener('click', (e) => { if (e.target === $('ped')) $('ped').hidden = true; });
-  $('ped-ok').addEventListener('click', async () => {
-    const p = pedido; if (!p || !cols) return;
-    const b = $('ped-ok'); b.disabled = true; b.textContent = 'Registrando…';
+  async function registrarPedido(p, statusVenda) {
     const agora = new Date().toISOString();
-    try {
       let cli = clientes.find((c) => digitos(c.telefone) && digitos(c.telefone) === digitos(p.tel));
       let cid;
       if (cli) { cid = cli.id; const { id, ...resto } = cli; await cols.clientes.doc(cid).set({ ...resto, nome: p.nome || resto.nome, cidade: p.cidade || resto.cidade || '', cpf: p.cpf || resto.cpf || '', cep: p.cep || resto.cep || '', endereco: p.endereco || resto.endereco || '', emerg_nome: p.emerg_nome || resto.emerg_nome || '', emerg_parentesco: p.emerg_parentesco || resto.emerg_parentesco || '', emerg_tel: p.emerg_tel || resto.emerg_tel || '', canal: resto.canal || 'Site', atualizado: agora }); }
       else { const ref = await cols.clientes.add({ nome: p.nome, telefone: p.tel, cidade: p.cidade || '', cpf: p.cpf || '', cep: p.cep || '', endereco: p.endereco || '', emerg_nome: p.emerg_nome || '', emerg_parentesco: p.emerg_parentesco || '', emerg_tel: p.emerg_tel || '', canal: 'Site', atualizado: agora }); cid = ref.id; }
-      const doc = { cliente_id: cid, item_id: '', modelo: p.produto, categoria: CATS.includes(p.cat) ? p.cat : inferirCat(p.produto), origem: p.cond === 'Novo' ? 'Paraguai (novo)' : 'Usado (Marketplace)', custo: 0, preco: Number(p.preco) || 0, forma: p.forma, parcelas: Number(p.parcelas) || 1, taxa: Number(p.taxa) || 0, status: 'Negociando', data: hoje(), obs: `Pedido do site ${p.id}. Escolha o aparelho do estoque ao fechar.`, pedido_site: p.id, atualizado: agora };
+      const doc = { cliente_id: cid, item_id: '', modelo: p.produto, categoria: CATS.includes(p.cat) ? p.cat : inferirCat(p.produto), origem: p.cond === 'Novo' ? 'Paraguai (novo)' : 'Usado (Marketplace)', custo: 0, preco: Number(p.preco) || 0, forma: p.forma, parcelas: Number(p.parcelas) || 1, taxa: Number(p.taxa) || 0, status: statusVenda, data: hoje(), obs: `Pedido do site ${p.id}. Escolha o aparelho do estoque ao fechar.`, pedido_site: p.id, atualizado: agora };
       if (p.forma === 'Crediário próprio') { doc.entrada = Number(p.entrada) || 0; doc.primeiro_venc = p.primeiro_venc || somaMeses(hoje(), 1); doc.juros_mes = Math.min(Number(p.juros_mes) || 0, 1); doc.parcelas_lista = gerarParcelas(doc.preco, doc.entrada, doc.parcelas, doc.primeiro_venc, null, doc.juros_mes); }
       await cols.vendas.add(doc);
+      return cid;
+  }
+  // Pedidos aprovados no site entram sozinhos em Vendas e Cobranças; cancelados/recusados cancelam a venda.
+  let carregouVendas = false; const emAndamento = new Set();
+  async function sincronizarPedidosSite() {
+    if (!cols || !carregouVendas || !window.wolfsPedidosSite) return;
+    let peds; try { peds = await window.wolfsPedidosSite(); } catch { return; }
+    for (const sp of peds) {
+      const v = vendas.find((x) => x.pedido_site === sp.codigo);
+      try {
+        if (['aprovado', 'concluido'].includes(sp.status)) {
+          const alvo = sp.status === 'concluido' ? 'Entregue' : 'Vendido';
+          if (!v && !emAndamento.has(sp.codigo)) { emAndamento.add(sp.codigo); const d = lerPedido(codigoDoPedido(sp)); if (d) await registrarPedido(d, alvo); toast(`Pedido ${sp.codigo} entrou em Vendas e Cobranças`); }
+          else if (v && (v.status === 'Negociando' || (alvo === 'Entregue' && v.status === 'Vendido'))) await cols.vendas.doc(v.id).update({ status: alvo });
+        } else if (['cancelado', 'recusado'].includes(sp.status) && v && v.status !== 'Cancelado') {
+          await cols.vendas.doc(v.id).update({ status: 'Cancelado' });
+        }
+      } catch { emAndamento.delete(sp.codigo); }
+    }
+  }
+  $('ped-ok').addEventListener('click', async () => {
+    const p = pedido; if (!p || !cols) return;
+    const b = $('ped-ok'); b.disabled = true; b.textContent = 'Registrando…';
+    try {
+      const cid = await registrarPedido(p, 'Negociando');
       clienteSel = cid; $('ped').hidden = true; toast(`Pedido ${p.id} registrado em Vendas`); if (cols.__pedidoSite) cols.__pedidoSite(p.id);
     } catch { $('ped-erro').textContent = 'Não foi possível registrar agora. Tente de novo.'; $('ped-erro').hidden = false; }
     finally { b.textContent = 'Registrar pedido'; }
@@ -1665,7 +1687,8 @@
     const assina = (nome, set) => cols[nome].onSnapshot((snap) => { set(snap.docs.map((d) => ({ id: d.id, ...d.data() }))); banner(''); render(); }, () => banner('Não foi possível carregar os dados. Recarregue a página.'));
     assina('estoque', (x) => { estoque = x; });
     assina('clientes', (x) => { clientes = x; });
-    assina('vendas', (x) => { vendas = x; });
+    assina('vendas', (x) => { vendas = x; if (!carregouVendas) { carregouVendas = true; sincronizarPedidosSite(); } });
+    setInterval(() => { if (document.visibilityState === 'visible') sincronizarPedidosSite(); }, 30000);
     assina('mercado', (x) => { mercado = x; });
     cols.config.doc('geral').onSnapshot((s) => { const d = s.data?.(); if (d && Number(d.dolar) > 1) dolar = Number(d.dolar); if (d && d.meta && Number(d.meta.valor) > 0) meta = { ...meta, ...d.meta }; render(); }, () => {});
   })();
