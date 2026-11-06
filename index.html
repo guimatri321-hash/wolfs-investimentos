@@ -63,6 +63,21 @@
   }
 
   /* Abertura */
+  .troca { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); align-items: stretch; margin: 8px 0 28px; border-radius: 28px; overflow: hidden; background: radial-gradient(120% 140% at 0% 0%, #2a0a0e 0%, #12070a 55%, #0b0b0e 100%); color: #fff; box-shadow: 0 30px 60px -35px rgba(227,32,46,.55); }
+  .troca-txt { padding: clamp(24px, 5vw, 52px); display: grid; gap: 16px; align-content: center; }
+  .troca-tag { justify-self: start; font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #fff; background: var(--red); padding: 6px 12px; border-radius: 999px; }
+  .troca h2 { font-family: var(--f-display); font-weight: 800; font-size: clamp(2.2rem, 6vw, 4.2rem); line-height: 1; letter-spacing: -.04em; margin: 0; text-wrap: balance; }
+  .troca h2 em { font-style: normal; color: #ff4b55; }
+  .troca p { margin: 0; color: rgba(255,255,255,.78); font-size: 1.05rem; max-width: 52ch; }
+  .troca-passos { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .troca-passos li { display: grid; gap: 8px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 12px; font-size: .86rem; color: rgba(255,255,255,.85); }
+  .troca-passos b { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--red); font-family: var(--f-display); }
+  .troca-cta { justify-self: start; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 800; font-size: 1.02rem; color: #fff; background: #1f9d55; padding: 15px 22px; border-radius: 14px; box-shadow: 0 14px 30px -14px rgba(31,157,85,.9); }
+  .troca-cta:hover { background: #188547; }
+  .troca-foto { position: relative; min-height: 320px; }
+  .troca-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+  .troca-foto::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, #12070a 0%, rgba(18,7,10,0) 35%); pointer-events: none; }
+  @media (max-width: 760px) { .troca { grid-template-columns: 1fr; } .troca-foto { min-height: 260px; order: -1; } .troca-foto::before { background: linear-gradient(0deg, #12070a 0%, rgba(18,7,10,0) 45%); } .troca-passos { grid-template-columns: 1fr; } }
   .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 28px; align-items: center; padding-block: 44px 28px; }
   .hero h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(2.1rem, 5vw, 3.6rem); line-height: 1.04; letter-spacing: -.035em; margin: 0; text-wrap: balance; }
   .hero h1 em { font-style: normal; color: var(--red); }
@@ -242,6 +257,21 @@
         <div class="ctas"><a class="btn dark" href="#produtos">Ver produtos</a><a class="btn" href="#crediario">Simular crediário</a></div>
       </div>
       <div class="banner" role="img" aria-label="Wolfs Investimentos"></div>
+    </section>
+
+    <section class="troca" aria-labelledby="troca-t">
+      <div class="troca-txt">
+        <span class="troca-tag">Troca facilitada</span>
+        <h2 id="troca-t">Aceitamos seu <em>iPhone</em> como entrada</h2>
+        <p>Traga seu iPhone usado: a gente avalia e o valor vira desconto no seu próximo aparelho. Vale no Pix, no cartão e pode cobrir a entrada do crediário.</p>
+        <ol class="troca-passos">
+          <li><b>1</b><span>Mande modelo, capacidade e saúde da bateria</span></li>
+          <li><b>2</b><span>Receba a avaliação do seu aparelho</span></li>
+          <li><b>3</b><span>O valor abate na sua compra</span></li>
+        </ol>
+        <a class="troca-cta" id="troca-cta" href="#produtos">Avaliar meu iPhone no WhatsApp</a>
+      </div>
+      <div class="troca-foto"><img src="fotos/troca.jpg" alt="iPhone usado sendo avaliado na Wolfs" loading="lazy"></div>
     </section>
 
     <div class="perks">
@@ -663,6 +693,7 @@
       $('pk-cartao').textContent = `Até ${CFG.cartaoMax}x no cartão`; $('pk-juros').textContent = `Entrada a partir de ${CFG.entradaMin}%, ${jurosTxt()}`;
       $('cr-badge').textContent = jurosTxt(); $('c2-badge').textContent = jurosTxt();
       $('rodape').textContent = CFG.rodape || '';
+      if (CFG.whatsapp) { const num = CFG.whatsapp.length <= 11 ? '55' + CFG.whatsapp : CFG.whatsapp; const a = $('troca-cta'); a.href = `https://wa.me/${num}?text=${encodeURIComponent('Olá, Wolfs! Quero dar meu iPhone como entrada.\nModelo: \nCapacidade (GB): \nSaúde da bateria (%): \nTem marcas ou defeitos? ')}`; a.target = '_blank'; a.rel = 'noopener'; }
       const regra = `Crediário sujeito a análise. Entrada mínima de ${CFG.entradaMin}%, até ${CFG.credMax} parcelas mensais${Number(CFG.jurosMes) > 0 ? ` e juros de ${pctTxt(CFG.jurosMes)}% ao mês (${anual()}% ao ano) sobre o valor parcelado` : ' sem juros'}.`;
       $('cr-fine').textContent = regra; $('c2-fine').textContent = regra;
       $('c2-lead').textContent = `Escolha o produto${CFG.valorLivre ? ' ou digite o valor' : ''}, ajuste a entrada e o dia do vencimento. Você vê o total a prazo antes de pedir.`;
