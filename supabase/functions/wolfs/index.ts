@@ -102,7 +102,7 @@ const codigoPedido = () => "W" + randomBytes(4).toString("hex").toUpperCase().sl
 /* ---------------- Formatação ---------------- */
 const produtoPublico = (p: any) => ({
   id: Number(p.id), nome: p.nome, categoria: p.categoria, condicao: p.condicao, preco: p.preco_centavos / 100,
-  descricao: p.descricao || "", imagem: p.imagem ? `${BASE}/imagem/${p.imagem}` : null, imagemChave: p.imagem || null,
+  descricao: p.descricao || "", imagem: p.imagem ? (/^https:\/\//.test(p.imagem) ? p.imagem : `${BASE}/imagem/${p.imagem}`) : null, imagemChave: p.imagem || null,
   ativo: p.ativo, ordem: p.ordem,
 });
 const configPublica = (c: Config) => ({ ...c, categorias: CATEGORIAS });
