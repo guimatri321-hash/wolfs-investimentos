@@ -218,6 +218,28 @@ async function criarPedido(b: any) {
   return { codigo: ped.codigo, forma: ped.forma, produtoNome: ped.produtoNome, preco: ped.preco, entrada: ped.entrada, parcelas: ped.parcelas, valorParcela: ped.valorParcela, total: ped.total, jurosMes: ped.jurosMes, primeiroVenc: ped.primeiroVenc, diaVencimento: ped.diaVencimento };
 }
 
+/* ---------------- Estoque do painel -> vitrine do site (ao vivo) ---------------- */
+// Cada aparelho "Disponível" com preço sugerido aparece na loja; vendido, reservado ou apagado sai da loja.
+async function sincronizarVitrine(id: string) {
+  const d = (await q("SELECT dados FROM wolfs_docs WHERE colecao = 'estoque' AND id = $1", [id]))[0]?.dados;
+  const prod = (await q("SELECT id, condicao FROM wolfs_produtos WHERE estoque_id = $1", [id]))[0];
+  const preco = Math.round(Number(d?.preco_sugerido) * 100);
+  if (!d || d.status !== "Disponível" || !(preco > 0) || d.no_site === false) {
+    if (prod) await q("UPDATE wolfs_produtos SET ativo = false, atualizado_em = now() WHERE id = $1", [prod.id]);
+    return;
+  }
+  const nome = texto([d.modelo, d.armazenamento].filter(Boolean).join(" "), 120) || "Produto";
+  const categoria = texto(d.categoria, 40) || "Outro";
+  const condicao = d.origem === "Paraguai (novo)" ? "Novo" : (prod?.condicao && prod.condicao !== "Novo" ? prod.condicao : "Seminovo");
+  const imagem = d.foto_id ? texto(d.foto_id, 100) : null;
+  if (prod) {
+    await q("UPDATE wolfs_produtos SET nome = $1, categoria = $2, condicao = $3, preco_centavos = $4, imagem = COALESCE($5, imagem), ativo = true, atualizado_em = now() WHERE id = $6", [nome, categoria, condicao, preco, imagem, prod.id]);
+  } else {
+    const desc = [condicao, d.cor ? `cor ${d.cor}` : "", Number(d.bateria) ? `bateria ${Number(d.bateria)}%` : ""].filter(Boolean).join(", ") + ".";
+    await q("INSERT INTO wolfs_produtos (nome, categoria, condicao, preco_centavos, imagem, descricao, ativo, ordem, estoque_id) VALUES ($1, $2, $3, $4, $5, $6, true, 10, $7)", [nome, categoria, condicao, preco, imagem, desc, id]);
+  }
+}
+
 /* ---------------- Acesso do administrador ---------------- */
 function senhaAdmin() {
   const s = Deno.env.get("WOLFS_SENHA") || "";
@@ -304,20 +326,24 @@ Deno.serve(async (req: Request) => {
         if (m === "POST" && !partes[3]) {
           const id = randomBytes(10).toString("hex");
           await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::jsonb)", [col, id, JSON.stringify(await corpo())]);
+          if (col === "estoque") await sincronizarVitrine(id);
           return json({ id }, 201);
         }
         const id = texto(partes[3], 100);
         if (!/^[A-Za-z0-9_-]+$/.test(id)) return erro("Documento inválido.");
         if (m === "PUT") {
           await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::jsonb) ON CONFLICT (colecao, id) DO UPDATE SET dados = EXCLUDED.dados, atualizado_em = now()", [col, id, JSON.stringify(await corpo())]);
+          if (col === "estoque") await sincronizarVitrine(id);
           return json({ ok: true });
         }
         if (m === "PATCH") {
           await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::jsonb) ON CONFLICT (colecao, id) DO UPDATE SET dados = wolfs_docs.dados || EXCLUDED.dados, atualizado_em = now()", [col, id, JSON.stringify(await corpo())]);
+          if (col === "estoque") await sincronizarVitrine(id);
           return json({ ok: true });
         }
         if (m === "DELETE") {
           await q("DELETE FROM wolfs_docs WHERE colecao = $1 AND id = $2", [col, id]);
+          if (col === "estoque") await sincronizarVitrine(id);
           return json({ ok: true });
         }
       }

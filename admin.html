@@ -628,7 +628,7 @@
   const nomeModelo = (i) => [i.modelo, i.armazenamento].filter(Boolean).join(' ').trim() || 'Sem nome';
   const itemPorId = (id) => estoque.find((i) => i.id === id);
   const clientePorId = (id) => clientes.find((c) => c.id === id);
-  const fotoUrl = (id) => window.wolfsImagemUrl ? window.wolfsImagemUrl(id) : null;
+  const fotoUrl = (id) => id && /^https:\/\//.test(id) ? id : window.wolfsImagemUrl ? window.wolfsImagemUrl(id) : null;
 
   function thumb(cat, fotoId, lg) {
     const t = el('div', 'thumb' + (lg ? ' lg' : ''));
