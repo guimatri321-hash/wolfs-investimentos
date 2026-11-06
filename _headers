@@ -1,0 +1,4 @@
+/*
+  Cache-Control: no-cache, must-revalidate
+/fotos/*
+  Cache-Control: public, max-age=3600
