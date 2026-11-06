@@ -328,19 +328,19 @@ Deno.serve(async (req: Request) => {
         const col = partes[2];
         if (m === "POST" && !partes[3]) {
           const id = randomBytes(10).toString("hex");
-          await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::jsonb)", [col, id, JSON.stringify(await corpo())]);
+          await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::text::jsonb)", [col, id, JSON.stringify(await corpo())]);
           if (col === "estoque") await sincronizarVitrine(id);
           return json({ id }, 201);
         }
         const id = texto(partes[3], 100);
         if (!/^[A-Za-z0-9_-]+$/.test(id)) return erro("Documento inválido.");
         if (m === "PUT") {
-          await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::jsonb) ON CONFLICT (colecao, id) DO UPDATE SET dados = EXCLUDED.dados, atualizado_em = now()", [col, id, JSON.stringify(await corpo())]);
+          await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::text::jsonb) ON CONFLICT (colecao, id) DO UPDATE SET dados = EXCLUDED.dados, atualizado_em = now()", [col, id, JSON.stringify(await corpo())]);
           if (col === "estoque") await sincronizarVitrine(id);
           return json({ ok: true });
         }
         if (m === "PATCH") {
-          await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::jsonb) ON CONFLICT (colecao, id) DO UPDATE SET dados = wolfs_docs.dados || EXCLUDED.dados, atualizado_em = now()", [col, id, JSON.stringify(await corpo())]);
+          await q("INSERT INTO wolfs_docs (colecao, id, dados) VALUES ($1, $2, $3::text::jsonb) ON CONFLICT (colecao, id) DO UPDATE SET dados = wolfs_docs.dados || EXCLUDED.dados, atualizado_em = now()", [col, id, JSON.stringify(await corpo())]);
           if (col === "estoque") await sincronizarVitrine(id);
           return json({ ok: true });
         }
@@ -361,7 +361,7 @@ Deno.serve(async (req: Request) => {
       }
       if (m === "PUT" && partes[1] === "config") {
         const novo = limparConfig(await corpo());
-        await q("UPDATE wolfs_config SET dados = dados || $1::jsonb, atualizado_em = now() WHERE id = 1", [JSON.stringify(novo)]);
+        await q("UPDATE wolfs_config SET dados = dados || $1::text::jsonb, atualizado_em = now() WHERE id = 1", [JSON.stringify(novo)]);
         return json({ config: configPublica(await lerConfig()) });
       }
       if (m === "POST" && partes[1] === "produtos") {
@@ -381,7 +381,7 @@ Deno.serve(async (req: Request) => {
           if ("preco_centavos" in p) extra.preco_sugerido = r.preco_centavos / 100;
           if ("imagem" in p && r.imagem) extra.foto_id = r.imagem;
           if ("nome" in p) { const e = (await q("SELECT dados FROM wolfs_docs WHERE colecao = 'estoque' AND id = $1", [r.estoque_id]))[0]?.dados; if (e && [e.modelo, e.armazenamento].filter(Boolean).join(" ") !== r.nome) { extra.modelo = r.nome; extra.armazenamento = ""; } }
-          await q("UPDATE wolfs_docs SET dados = dados || $1::jsonb, atualizado_em = now() WHERE colecao = 'estoque' AND id = $2", [JSON.stringify(extra), r.estoque_id]);
+          await q("UPDATE wolfs_docs SET dados = dados || $1::text::jsonb, atualizado_em = now() WHERE colecao = 'estoque' AND id = $2", [JSON.stringify(extra), r.estoque_id]);
         }
         return json(produtoPublico(r));
       }
